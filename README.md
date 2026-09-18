@@ -2,7 +2,7 @@
 
 A free, open-source tool that automates job applications. It runs entirely on your own computer, using your own LinkedIn account. It finds jobs relevant to you on LinkedIn, applies with Easy Apply, and - for every other job - **opens the company's own application site, signs in with Google when the site asks you to, fills the form from your resume and details, and submits it.** It can also tailor answers to each job with AI.
 
-Maintained by **Om Abhyankar** · https://github.com/sideeffects69
+Maintained by **Om Abhyankar** · https://github.com/sideeffects69 · Source: https://github.com/sideeffects69/Magic-Apply-Jobs
 
 ## ✨ Content
 - [Easy start (recommended)](#-easy-start-recommended)
