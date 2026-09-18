@@ -1,0 +1,322 @@
+<!--
+  Author:  Om Abhyankar
+  Copyright (c) 2026 Om Abhyankar
+  License: MIT License  (https://opensource.org/license/mit)
+  GitHub:  https://github.com/sideeffects69
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Magic Apply - Jobs - Failed Applications</title>
+    <style>
+        :root {
+            --bg: #f4f6f9;
+            --card: #ffffff;
+            --ink: #1f2733;
+            --muted: #6b7684;
+            --line: #dce1e8;
+            --brand: #2563eb;
+            --brand-dark: #1d4ed8;
+            --ok: #16a34a;
+            --danger: #dc2626;
+            --thead-bg: #f1f4f8;
+            --row-alt: #fafbfc;
+            --shadow: 0 1px 3px rgba(16,24,40,.08), 0 1px 2px rgba(16,24,40,.06);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #0f172a;
+                --card: #1a2436;
+                --ink: #e5e9f0;
+                --muted: #93a0b4;
+                --line: #2c3a52;
+                --brand: #5b8def;
+                --brand-dark: #7fa5f2;
+                --ok: #34d399;
+                --danger: #f87171;
+                --thead-bg: #202c42;
+                --row-alt: #17202f;
+                --shadow: 0 1px 3px rgba(0,0,0,.35), 0 1px 2px rgba(0,0,0,.3);
+            }
+        }
+        * { box-sizing: border-box; }
+        html { -webkit-text-size-adjust: 100%; overflow-x: hidden; }
+        body {
+            margin: 0;
+            overflow-x: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--ink);
+            line-height: 1.5;
+        }
+        header { background: var(--card); border-bottom: 1px solid var(--line); padding: 20px 24px; }
+        header h1 { margin: 0 0 4px; font-size: 20px; }
+        header p { margin: 0; color: var(--muted); font-size: 14px; }
+        .wrap { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 16px; }
+        main.wrap { padding: 24px 16px 40px; }
+        .header-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+        .nav-link { font-size: 13px; color: var(--brand); text-decoration: none; }
+        .nav-link:hover { text-decoration: underline; }
+        .export-btn {
+            flex-shrink: 0; background: var(--brand); color: #fff; text-decoration: none;
+            font-size: 13.5px; font-weight: 600; padding: 9px 16px; border-radius: 7px; white-space: nowrap;
+        }
+        .export-btn:hover { background: var(--brand-dark); }
+        .export-btn.is-disabled { background: var(--muted); cursor: not-allowed; opacity: .6; }
+        .export-btn.danger { background: var(--danger); border: none; font: inherit; cursor: pointer; }
+        .export-btn.danger:hover { background: #b91c1c; }
+        .header-btns { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+        .search-box {
+            flex: 1 1 260px; max-width: 360px; font: inherit; font-size: 13.5px; padding: 8px 12px;
+            border: 1px solid var(--line); border-radius: 7px; background: var(--bg); color: var(--ink);
+        }
+        .search-box:focus { outline: 2px solid var(--brand); outline-offset: -1px; }
+        #summaryHint { margin: 0; white-space: nowrap; }
+        .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); padding: 16px; }
+        .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table.history { border-collapse: collapse; width: 100%; min-width: 760px; font-size: 13.5px; }
+        table.history th, table.history td { border: 1px solid var(--line); padding: 9px 11px; text-align: left; vertical-align: top; white-space: nowrap; }
+        table.history td.wraps { white-space: normal; }
+        table.history th { background: var(--thead-bg); font-weight: 600; }
+        table.history tbody tr:nth-child(even) { background: var(--row-alt); }
+        table.history a { color: var(--brand); text-decoration: none; }
+        table.history a:hover { text-decoration: underline; }
+        .reason-badge {
+            display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600;
+            background: rgba(220,38,38,.12); color: var(--danger);
+        }
+        .reason-badge.skip { background: rgba(107,118,132,.15); color: var(--muted); }
+        .thumb { width: 64px; height: 40px; object-fit: cover; border-radius: 5px; border: 1px solid var(--line); display: block; }
+        .placeholder-row td { white-space: normal; text-align: center; color: var(--muted); padding: 28px 12px; }
+        .placeholder-row.error td { color: var(--danger); }
+        .hint { margin: 10px 2px 0; color: var(--muted); font-size: 12.5px; }
+
+        @media (max-width: 640px) {
+            header { padding: 16px 16px; }
+            header h1 { font-size: 18px; }
+            .wrap { padding: 0 12px; }
+            main.wrap { padding: 18px 12px 32px; }
+            .card { padding: 12px; }
+            .header-btns { width: 100%; }
+            .export-btn { flex: 1 1 auto; width: 100%; text-align: center; }
+            .search-box { max-width: none; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="wrap header-row">
+            <div>
+                <h1>Failed Applications</h1>
+                <p>Jobs the bot skipped or couldn't finish applying to, with the debug screenshot it took at the time. <a class="nav-link" href="/history">&larr; Applied jobs history</a></p>
+            </div>
+            <div class="header-btns">
+                <a id="exportBtn" class="export-btn" href="/failed-jobs/export" download>Export CSV</a>
+                <button id="clearBtn" class="export-btn danger" type="button">Clear list</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="wrap">
+        <div class="card">
+            <div class="toolbar">
+                <input type="search" id="searchBox" class="search-box" placeholder="Search by reason or job link&hellip;" aria-label="Search failed jobs">
+                <p class="hint" id="summaryHint"></p>
+            </div>
+            <div class="table-scroll">
+                <table class="history">
+                    <thead>
+                        <tr>
+                            <th class="center" style="width:44px;">#</th>
+                            <th>Job</th>
+                            <th>Reason</th>
+                            <th>Date Tried</th>
+                            <th>Screenshot</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyBody">
+                        <tr class="placeholder-row"><td colspan="5">Loading failed jobs...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="hint" id="rowCountHint"></p>
+        </div>
+    </main>
+
+    <script>
+        (function () {
+            'use strict';
+
+            var jobs = [];
+            var searchTerm = '';
+            var tbody = document.getElementById('historyBody');
+            var rowCountHint = document.getElementById('rowCountHint');
+            var summaryHint = document.getElementById('summaryHint');
+            var searchBox = document.getElementById('searchBox');
+            var exportBtn = document.getElementById('exportBtn');
+            var clearBtn = document.getElementById('clearBtn');
+
+            // Reasons that mean "the bot correctly skipped this per your filters",
+            // as opposed to an actual error worth investigating.
+            var SKIP_REASONS = ['Found a Bad Word in About Job', 'Found Blacklisted words in About Company', 'Required experience is high'];
+
+            function isSkip(job) {
+                return SKIP_REASONS.indexOf(job.Reason) !== -1;
+            }
+
+            function makeLink(href, label) {
+                var a = document.createElement('a');
+                a.href = href;
+                a.target = '_blank';
+                a.rel = 'noopener';
+                a.textContent = label;
+                return a;
+            }
+
+            function matchesSearch(job) {
+                if (!searchTerm) return true;
+                var haystack = [job.Reason, job.Job_ID, job.Job_Link].filter(Boolean).join(' ').toLowerCase();
+                return haystack.indexOf(searchTerm) !== -1;
+            }
+
+            function updateSummary() {
+                if (!jobs.length) { summaryHint.textContent = ''; return; }
+                var skipped = jobs.filter(isSkip).length;
+                var errored = jobs.length - skipped;
+                summaryHint.textContent = jobs.length + ' total • ' + errored + ' need attention • ' + skipped + ' filtered by your rules';
+            }
+
+            function updateExportAvailability() {
+                var hasJobs = jobs.length > 0;
+                if (exportBtn) {
+                    exportBtn.classList.toggle('is-disabled', !hasJobs);
+                    if (!hasJobs) exportBtn.setAttribute('aria-disabled', 'true');
+                    else exportBtn.removeAttribute('aria-disabled');
+                }
+                if (clearBtn) clearBtn.disabled = !hasJobs;
+            }
+
+            function buildRow(job, rowNumber) {
+                var tr = document.createElement('tr');
+
+                tr.appendChild(makeCellText(String(rowNumber), true));
+
+                var jobCell = document.createElement('td');
+                if (job.Job_Link) jobCell.appendChild(makeLink(job.Job_Link, job.Job_ID || 'View job'));
+                else jobCell.textContent = job.Job_ID || '';
+                tr.appendChild(jobCell);
+
+                var reasonCell = document.createElement('td');
+                reasonCell.classList.add('wraps');
+                var badge = document.createElement('span');
+                badge.className = 'reason-badge' + (isSkip(job) ? ' skip' : '');
+                badge.textContent = job.Reason || 'Unknown';
+                reasonCell.appendChild(badge);
+                tr.appendChild(reasonCell);
+
+                tr.appendChild(makeCellText(job.Date_Tried || ''));
+
+                var shotCell = document.createElement('td');
+                if (job.Screenshot_Name && job.Screenshot_Name !== 'Not Available') {
+                    var shotUrl = '/screenshots/' + encodeURIComponent(job.Screenshot_Name);
+                    var link = document.createElement('a');
+                    link.href = shotUrl;
+                    link.target = '_blank';
+                    link.rel = 'noopener';
+                    var img = document.createElement('img');
+                    img.src = shotUrl;
+                    img.alt = 'Failure screenshot';
+                    img.className = 'thumb';
+                    img.loading = 'lazy';
+                    link.appendChild(img);
+                    shotCell.appendChild(link);
+                } else {
+                    shotCell.textContent = 'N/A';
+                }
+                tr.appendChild(shotCell);
+
+                return tr;
+            }
+
+            function makeCellText(text, center) {
+                var td = document.createElement('td');
+                td.textContent = text;
+                if (center) td.classList.add('center');
+                return td;
+            }
+
+            function showPlaceholder(message, isError) {
+                tbody.innerHTML = '';
+                var tr = document.createElement('tr');
+                tr.className = 'placeholder-row' + (isError ? ' error' : '');
+                var td = document.createElement('td');
+                td.colSpan = 5;
+                td.textContent = message;
+                tr.appendChild(td);
+                tbody.appendChild(tr);
+                rowCountHint.textContent = '';
+            }
+
+            function render() {
+                updateSummary();
+                updateExportAvailability();
+                if (!jobs.length) {
+                    showPlaceholder('No failed applications recorded. Nice.', false);
+                    return;
+                }
+                var filtered = jobs.filter(matchesSearch);
+                if (!filtered.length) {
+                    showPlaceholder('No entries match "' + searchTerm + '".', false);
+                    return;
+                }
+                tbody.innerHTML = '';
+                filtered.forEach(function (job, idx) {
+                    tbody.appendChild(buildRow(job, idx + 1));
+                });
+                rowCountHint.textContent = filtered.length + (filtered.length === 1 ? ' entry shown.' : ' entries shown.');
+            }
+
+            function onSearchInput() {
+                searchTerm = searchBox.value.trim().toLowerCase();
+                render();
+            }
+
+            function onExportClick(evt) {
+                if (!jobs.length) evt.preventDefault();
+            }
+
+            function clearFailed() {
+                if (!jobs.length) return;
+                if (!confirm('Clear the failed-jobs list?\n\nThis permanently deletes the failed-jobs CSV. Screenshots on disk are not deleted. This cannot be undone.')) return;
+                fetch('/failed-jobs/clear', { method: 'POST' })
+                    .then(function (r) { return r.json(); })
+                    .then(function () { jobs = []; render(); })
+                    .catch(function (err) { alert('Could not clear: ' + err); });
+            }
+
+            searchBox.addEventListener('input', onSearchInput);
+            if (exportBtn) exportBtn.addEventListener('click', onExportClick);
+            if (clearBtn) clearBtn.addEventListener('click', clearFailed);
+
+            fetch('/failed-jobs')
+                .then(function (resp) {
+                    if (resp.status === 404) return [];
+                    if (!resp.ok) throw new Error('Server responded with ' + resp.status);
+                    return resp.json();
+                })
+                .then(function (data) {
+                    jobs = Array.isArray(data) ? data : [];
+                    render();
+                })
+                .catch(function (err) {
+                    console.error('Failed to load failed jobs:', err);
+                    updateExportAvailability();
+                    showPlaceholder('Could not load failed jobs. Make sure the app is running and try refreshing this page.', true);
+                });
+        })();
+    </script>
+</body>
+</html>

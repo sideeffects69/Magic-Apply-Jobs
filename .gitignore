@@ -1,0 +1,28 @@
+# Python / tooling
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+.vscode/
+.idea/
+.claude/
+
+# The portable exe build (build_exe.bat) - a large binary, published as a download instead of committed
+build/
+dist/
+*.spec
+
+# Personal data never belongs in the repo. The tool itself keeps all of this in
+# %LOCALAPPDATA%\AutoJobApplier (outside the project), but these names stay ignored
+# in case an older copy or a manual run leaves them here.
+all excels/
+all resumes/
+logs/
+old/
+config/resume_data.yaml
+apikeys.py
+user_config.json
+.bot_run.log
+.bot_run.pid
+.panel.lock
+*.csv

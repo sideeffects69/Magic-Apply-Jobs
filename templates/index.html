@@ -1,0 +1,601 @@
+<!--
+  Author:  Om Abhyankar
+  Copyright (c) 2026 Om Abhyankar
+  License: MIT License  (https://opensource.org/license/mit)
+  GitHub:  https://github.com/sideeffects69
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Magic Apply - Jobs - Applied Jobs History</title>
+    <style>
+        :root {
+            --bg: #f4f6f9;
+            --card: #ffffff;
+            --ink: #1f2733;
+            --muted: #6b7684;
+            --line: #dce1e8;
+            --brand: #2563eb;
+            --brand-dark: #1d4ed8;
+            --ok: #16a34a;
+            --danger: #dc2626;
+            --thead-bg: #f1f4f8;
+            --row-alt: #fafbfc;
+            --shadow: 0 1px 3px rgba(16,24,40,.08), 0 1px 2px rgba(16,24,40,.06);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #0f172a;
+                --card: #1a2436;
+                --ink: #e5e9f0;
+                --muted: #93a0b4;
+                --line: #2c3a52;
+                --brand: #5b8def;
+                --brand-dark: #7fa5f2;
+                --ok: #34d399;
+                --danger: #f87171;
+                --thead-bg: #202c42;
+                --row-alt: #17202f;
+                --shadow: 0 1px 3px rgba(0,0,0,.35), 0 1px 2px rgba(0,0,0,.3);
+            }
+        }
+        * { box-sizing: border-box; }
+        html { -webkit-text-size-adjust: 100%; overflow-x: hidden; }
+        body {
+            margin: 0;
+            overflow-x: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--ink);
+            line-height: 1.5;
+        }
+        header {
+            background: var(--card);
+            border-bottom: 1px solid var(--line);
+            padding: 20px 24px;
+        }
+        header h1 { margin: 0 0 4px; font-size: 20px; }
+        header p { margin: 0; color: var(--muted); font-size: 14px; }
+        .wrap { width: 100%; max-width: 1100px; margin: 0 auto; padding: 0 16px; }
+        main.wrap { padding: 24px 16px 40px; }
+        .header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .export-btn {
+            flex-shrink: 0;
+            background: var(--brand);
+            color: #fff;
+            text-decoration: none;
+            font-size: 13.5px;
+            font-weight: 600;
+            padding: 9px 16px;
+            border-radius: 7px;
+            white-space: nowrap;
+        }
+        .export-btn:hover { background: var(--brand-dark); }
+        .export-btn.is-disabled { background: var(--muted); cursor: not-allowed; opacity: .6; }
+        .export-btn.danger { background: var(--danger); border: none; font: inherit; cursor: pointer; }
+        .export-btn.danger:hover { background: #b91c1c; }
+        .header-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+        .nav-link { font-size: 13px; color: var(--brand); text-decoration: none; }
+        .nav-link:hover { text-decoration: underline; }
+        .toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+        .search-box {
+            flex: 1 1 260px;
+            max-width: 360px;
+            font: inherit;
+            font-size: 13.5px;
+            padding: 8px 12px;
+            border: 1px solid var(--line);
+            border-radius: 7px;
+            background: var(--bg);
+            color: var(--ink);
+        }
+        .search-box:focus { outline: 2px solid var(--brand); outline-offset: -1px; }
+        #summaryHint { margin: 0; white-space: nowrap; }
+        .card {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            padding: 16px;
+        }
+        .table-scroll {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        table.history {
+            border-collapse: collapse;
+            width: 100%;
+            min-width: 720px;
+            font-size: 13.5px;
+        }
+        table.history th, table.history td {
+            border: 1px solid var(--line);
+            padding: 9px 11px;
+            text-align: left;
+            vertical-align: top;
+            white-space: nowrap;
+        }
+        table.history td.wraps { white-space: normal; }
+        table.history th {
+            background: var(--thead-bg);
+            font-weight: 600;
+            user-select: none;
+        }
+        table.history tbody tr:nth-child(even) { background: var(--row-alt); }
+        table.history a { color: var(--brand); text-decoration: none; }
+        table.history a:hover { text-decoration: underline; }
+        .sort-toggle {
+            background: none;
+            border: none;
+            font: inherit;
+            font-weight: 600;
+            color: inherit;
+            cursor: pointer;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .sort-toggle:hover { color: var(--brand); }
+        .sort-toggle .arrow { font-size: 11px; color: var(--muted); }
+        .sort-toggle:hover .arrow { color: var(--brand); }
+        .tick {
+            color: var(--ok);
+            font-weight: 700;
+        }
+        .status-select {
+            font: inherit;
+            font-size: 13px;
+            padding: 5px 8px;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            background: var(--card);
+            color: var(--ink);
+        }
+        .followup-badge {
+            display: inline-block;
+            margin-left: 6px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 11.5px;
+            font-weight: 600;
+            background: rgba(220, 38, 38, .12);
+            color: var(--danger);
+            white-space: nowrap;
+        }
+        .center { text-align: center; }
+        .placeholder-row td {
+            white-space: normal;
+            text-align: center;
+            color: var(--muted);
+            padding: 28px 12px;
+        }
+        .placeholder-row.error td { color: var(--danger); }
+        .hint {
+            margin: 10px 2px 0;
+            color: var(--muted);
+            font-size: 12.5px;
+        }
+
+        @media (max-width: 640px) {
+            header { padding: 16px 16px; }
+            header h1 { font-size: 18px; }
+            .wrap { padding: 0 12px; }
+            main.wrap { padding: 18px 12px 32px; }
+            .card { padding: 12px; }
+            .header-btns { width: 100%; }
+            .export-btn { flex: 1 1 auto; width: 100%; text-align: center; }
+            .search-box { max-width: none; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="wrap header-row">
+            <div>
+                <h1>Applied Jobs History</h1>
+                <p>Every job the bot has applied to (or queued for you to apply to), in one place. <a class="nav-link" href="/failures">Failed applications &rarr;</a></p>
+            </div>
+            <div class="header-btns">
+                <a id="exportBtn" class="export-btn" href="/applied-jobs/export" download>Export CSV</a>
+                <button id="clearBtn" class="export-btn danger" type="button">Clear history</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="wrap">
+        <div class="card">
+            <div class="toolbar">
+                <input type="search" id="searchBox" class="search-box" placeholder="Search by title, company, or HR contact&hellip;" aria-label="Search applied jobs">
+                <p class="hint" id="summaryHint"></p>
+            </div>
+            <div class="table-scroll">
+                <table class="history">
+                    <thead>
+                        <tr>
+                            <th class="center" style="width:44px;">#</th>
+                            <th>Job Title</th>
+                            <th>Company</th>
+                            <th>HR Contact</th>
+                            <th>
+                                <button type="button" class="sort-toggle" id="appSortBtn" aria-label="Sort by Application">
+                                    Application <span class="arrow" id="appSortArrow">&#8645;</span>
+                                </button>
+                            </th>
+                            <th class="center">Applied</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyBody">
+                        <tr class="placeholder-row"><td colspan="7">Loading applied jobs...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="hint" id="rowCountHint"></p>
+        </div>
+    </main>
+
+    <script>
+        (function () {
+            'use strict';
+
+            var jobs = [];               // raw data from the server
+            var sortDirection = null;    // null = server order, 'asc' or 'desc' once toggled
+            var searchTerm = '';
+            var tbody = document.getElementById('historyBody');
+            var sortBtn = document.getElementById('appSortBtn');
+            var sortArrow = document.getElementById('appSortArrow');
+            var rowCountHint = document.getElementById('rowCountHint');
+            var summaryHint = document.getElementById('summaryHint');
+            var searchBox = document.getElementById('searchBox');
+            var exportBtn = document.getElementById('exportBtn');
+            var clearBtn = document.getElementById('clearBtn');
+
+            function makeCell(tag, opts) {
+                var node = document.createElement(tag);
+                opts = opts || {};
+                if (opts.className) node.className = opts.className;
+                if (opts.text !== undefined) node.textContent = opts.text;
+                if (opts.center) node.classList.add('center');
+                return node;
+            }
+
+            function makeLink(href, label, extraClass) {
+                var a = document.createElement('a');
+                a.href = href;
+                a.target = '_blank';
+                a.rel = 'noopener';
+                a.textContent = label;
+                if (extraClass) a.className = extraClass;
+                return a;
+            }
+
+            function isKnown(value) {
+                return !!(value && value !== 'Unknown');
+            }
+
+            function hasHrContact(job) {
+                return isKnown(job.HR_Name) || isKnown(job.HR_Email) || isKnown(job.HR_Phone);
+            }
+
+            // 0 = Easy Applied, 1 = external link available, 2 = nothing to show
+            function applicationRank(job) {
+                if (job.External_Job_link === 'Easy Applied') return 0;
+                if (job.External_Job_link) return 1;
+                return 2;
+            }
+
+            function isAppliedAlready(job) {
+                return !!(job.Date_Applied && job.Date_Applied !== 'Pending');
+            }
+
+            function buildAppliedCell(job) {
+                var td = makeCell('td', { center: true });
+                if (isAppliedAlready(job)) {
+                    var span = document.createElement('span');
+                    span.className = 'tick';
+                    span.setAttribute('aria-label', 'Applied');
+                    span.textContent = '✓';
+                    td.appendChild(span);
+                }
+                return td;
+            }
+
+            function markRowApplied(jobId) {
+                var row = tbody.querySelector('tr[data-job-id="' + CSS.escape(String(jobId)) + '"]');
+                var record = jobs.filter(function (j) { return String(j.Job_ID) === String(jobId); })[0];
+                if (record) record.Date_Applied = new Date().toISOString();
+                updateSummary();
+                if (!row) return;
+                var appliedCell = row.querySelector('.applied-cell');
+                if (!appliedCell) return;
+                appliedCell.innerHTML = '';
+                var span = document.createElement('span');
+                span.className = 'tick';
+                span.setAttribute('aria-label', 'Applied');
+                span.textContent = '✓';
+                appliedCell.appendChild(span);
+            }
+
+            function buildApplicationCell(job) {
+                var td = document.createElement('td');
+                if (job.External_Job_link === 'Easy Applied') {
+                    td.textContent = 'Easy Applied';
+                    return td;
+                }
+                if (job.External_Job_link) {
+                    var link = makeLink(job.External_Job_link, 'External link');
+                    link.addEventListener('click', function () {
+                        fetch('/applied-jobs/' + encodeURIComponent(job.Job_ID), { method: 'PUT' })
+                            .then(function (resp) {
+                                if (resp.ok) markRowApplied(job.Job_ID);
+                            })
+                            .catch(function (err) {
+                                console.error('Could not mark job as applied:', err);
+                            });
+                    });
+                    td.appendChild(link);
+                    return td;
+                }
+                td.textContent = 'N/A';
+                return td;
+            }
+
+            function buildRow(job, rowNumber) {
+                var tr = document.createElement('tr');
+                tr.setAttribute('data-job-id', job.Job_ID);
+
+                tr.appendChild(makeCell('td', { center: true, text: String(rowNumber) }));
+
+                var titleCell = document.createElement('td');
+                titleCell.classList.add('wraps');
+                if (job.Job_Link) {
+                    titleCell.appendChild(makeLink(job.Job_Link, job.Title || '(untitled)'));
+                } else {
+                    titleCell.textContent = job.Title || '(untitled)';
+                }
+                tr.appendChild(titleCell);
+
+                var companyCell = makeCell('td', { text: job.Company || '' });
+                companyCell.classList.add('wraps');
+                tr.appendChild(companyCell);
+
+                var hrCell = document.createElement('td');
+                hrCell.classList.add('wraps');
+                if (!hasHrContact(job)) {
+                    hrCell.textContent = 'N/A';
+                } else {
+                    var lines = [];
+                    if (isKnown(job.HR_Name) && isKnown(job.HR_Link)) {
+                        lines.push(makeLink(job.HR_Link, job.HR_Name));
+                    } else if (isKnown(job.HR_Name)) {
+                        lines.push(document.createTextNode(job.HR_Name));
+                    } else if (isKnown(job.HR_Link)) {
+                        lines.push(makeLink(job.HR_Link, 'Profile'));
+                    }
+                    if (isKnown(job.HR_Email)) {
+                        job.HR_Email.split(';').forEach(function (email) {
+                            email = email.trim();
+                            if (email) lines.push(makeLink('mailto:' + email, email));
+                        });
+                    }
+                    if (isKnown(job.HR_Phone)) {
+                        var phones = job.HR_Phone.split(';').map(function (p) { return p.trim(); }).filter(Boolean);
+                        if (phones.length === 1) {
+                            lines.push(makeLink('tel:' + phones[0], phones[0]));
+                        } else {
+                            phones.forEach(function (phone) { lines.push(document.createTextNode(phone)); });
+                        }
+                    }
+                    lines.forEach(function (node, idx) {
+                        if (idx > 0) hrCell.appendChild(document.createElement('br'));
+                        hrCell.appendChild(node);
+                    });
+                }
+                tr.appendChild(hrCell);
+
+                tr.appendChild(buildApplicationCell(job));
+
+                var appliedCell = buildAppliedCell(job);
+                appliedCell.classList.add('applied-cell');
+                tr.appendChild(appliedCell);
+
+                tr.appendChild(buildStatusCell(job));
+
+                return tr;
+            }
+
+            var JOB_STATUSES = ['Applied', 'Interviewing', 'Offer', 'Rejected', 'Ghosted', 'Withdrawn'];
+
+            function daysSince(dateStr) {
+                if (!dateStr) return null;
+                // The CSV stores Python's str(datetime.now()), e.g. "2026-09-03 18:56:28.695845" -
+                // space-separated rather than ISO 8601's "T". Normalize so Date parsing is reliable
+                // across browsers instead of relying on each engine's lenient-parsing fallback.
+                var normalized = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/.test(dateStr)
+                    ? dateStr.replace(' ', 'T')
+                    : dateStr;
+                var d = new Date(normalized);
+                if (isNaN(d.getTime())) return null;
+                return Math.floor((Date.now() - d.getTime()) / 86400000);
+            }
+
+            function needsFollowUp(job) {
+                if ((job.Status || 'Applied') !== 'Applied') return false;
+                if (!isAppliedAlready(job)) return false;
+                var days = daysSince(job.Date_Applied);
+                return days !== null && days >= 7;
+            }
+
+            function buildStatusCell(job) {
+                var td = document.createElement('td');
+                var select = document.createElement('select');
+                select.className = 'status-select';
+                JOB_STATUSES.forEach(function (s) {
+                    var opt = document.createElement('option');
+                    opt.value = s;
+                    opt.textContent = s;
+                    if (s === (job.Status || 'Applied')) opt.selected = true;
+                    select.appendChild(opt);
+                });
+                select.addEventListener('change', function () {
+                    var newStatus = select.value;
+                    fetch('/applied-jobs/' + encodeURIComponent(job.Job_ID) + '/status', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ status: newStatus })
+                    }).then(function (r) {
+                        if (r.ok) { job.Status = newStatus; updateSummary(); }
+                    }).catch(function () {});
+                });
+                td.appendChild(select);
+                if (needsFollowUp(job)) {
+                    var badge = document.createElement('span');
+                    badge.className = 'followup-badge';
+                    badge.textContent = 'Follow up?';
+                    badge.title = 'Applied 7+ days ago with no status update';
+                    td.appendChild(badge);
+                }
+                return td;
+            }
+
+            function matchesSearch(job) {
+                if (!searchTerm) return true;
+                var haystack = [job.Title, job.Company, job.HR_Name, job.HR_Email, job.HR_Phone, job.Status]
+                    .filter(Boolean).join(' ').toLowerCase();
+                return haystack.indexOf(searchTerm) !== -1;
+            }
+
+            function currentOrder() {
+                var filtered = jobs.filter(matchesSearch);
+                if (!sortDirection) return filtered;
+                var withIndex = filtered.map(function (job, i) { return { job: job, i: i }; });
+                withIndex.sort(function (a, b) {
+                    var ra = applicationRank(a.job), rb = applicationRank(b.job);
+                    if (ra !== rb) return sortDirection === 'asc' ? ra - rb : rb - ra;
+                    return a.i - b.i;
+                });
+                return withIndex.map(function (entry) { return entry.job; });
+            }
+
+            function updateSummary() {
+                if (!jobs.length) { summaryHint.textContent = ''; return; }
+                var applied = jobs.filter(isAppliedAlready).length;
+                var easy = jobs.filter(function (j) { return j.External_Job_link === 'Easy Applied'; }).length;
+                var external = jobs.length - easy;
+                var followUps = jobs.filter(needsFollowUp).length;
+                summaryHint.textContent = jobs.length + ' total • ' + easy + ' Easy Applied • ' + external + ' external • ' + applied + ' confirmed applied' +
+                    (followUps ? ' • ' + followUps + ' need follow-up' : '');
+            }
+
+            function updateExportAvailability() {
+                var hasJobs = jobs.length > 0;
+                if (exportBtn) {
+                    exportBtn.classList.toggle('is-disabled', !hasJobs);
+                    if (!hasJobs) exportBtn.setAttribute('aria-disabled', 'true');
+                    else exportBtn.removeAttribute('aria-disabled');
+                }
+                if (clearBtn) clearBtn.disabled = !hasJobs;
+            }
+
+            function clearHistory() {
+                if (!jobs.length) return;
+                if (!confirm('Clear all applied jobs history?\n\nThis permanently deletes the history CSV. This cannot be undone.')) return;
+                fetch('/applied-jobs/clear', { method: 'POST' })
+                    .then(function (r) { return r.json(); })
+                    .then(function () {
+                        jobs = [];
+                        render();
+                    })
+                    .catch(function (err) { alert('Could not clear history: ' + err); });
+            }
+
+            function showPlaceholder(message, isError) {
+                tbody.innerHTML = '';
+                var tr = document.createElement('tr');
+                tr.className = 'placeholder-row' + (isError ? ' error' : '');
+                var td = document.createElement('td');
+                td.colSpan = 7;
+                td.textContent = message;
+                tr.appendChild(td);
+                tbody.appendChild(tr);
+                rowCountHint.textContent = '';
+            }
+
+            function render() {
+                updateSummary();
+                updateExportAvailability();
+                if (!jobs.length) {
+                    showPlaceholder('No applied jobs yet. Run the bot to start building your history.', false);
+                    return;
+                }
+                var ordered = currentOrder();
+                if (!ordered.length) {
+                    showPlaceholder('No jobs match "' + searchTerm + '".', false);
+                    return;
+                }
+                tbody.innerHTML = '';
+                ordered.forEach(function (job, idx) {
+                    tbody.appendChild(buildRow(job, idx + 1));
+                });
+                rowCountHint.textContent = ordered.length + (ordered.length === 1 ? ' job shown.' : ' jobs shown.');
+            }
+
+            function toggleSort() {
+                if (sortDirection === 'asc') {
+                    sortDirection = 'desc';
+                    sortArrow.textContent = '↓';
+                } else {
+                    sortDirection = 'asc';
+                    sortArrow.textContent = '↑';
+                }
+                render();
+            }
+
+            function onSearchInput() {
+                searchTerm = searchBox.value.trim().toLowerCase();
+                render();
+            }
+
+            function onExportClick(evt) {
+                if (!jobs.length) evt.preventDefault();
+            }
+
+            sortBtn.addEventListener('click', toggleSort);
+            searchBox.addEventListener('input', onSearchInput);
+            if (exportBtn) exportBtn.addEventListener('click', onExportClick);
+            if (clearBtn) clearBtn.addEventListener('click', clearHistory);
+
+            fetch('/applied-jobs')
+                .then(function (resp) {
+                    if (!resp.ok) throw new Error('Server responded with ' + resp.status);
+                    return resp.json();
+                })
+                .then(function (data) {
+                    jobs = Array.isArray(data) ? data : [];
+                    render();
+                })
+                .catch(function (err) {
+                    console.error('Failed to load applied jobs:', err);
+                    updateExportAvailability();
+                    showPlaceholder('Could not load applied jobs. Make sure the app is running and try refreshing this page.', true);
+                });
+        })();
+    </script>
+</body>
+</html>

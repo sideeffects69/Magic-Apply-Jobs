@@ -1,0 +1,6 @@
+# Optional: powers the "Generate ATS Resume" button in the control panel
+# (turns config/resume_data.yaml into a clean, ATS-friendly PDF via RenderCV).
+# Not required to run the job applier itself. Install with:
+#   pip install -r requirements-resume.txt
+# Needs Python 3.12+.
+rendercv[full]>=2.0

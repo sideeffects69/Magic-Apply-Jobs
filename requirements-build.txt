@@ -1,0 +1,2 @@
+# Only needed to build the portable exe (see build_exe.bat)
+pyinstaller
