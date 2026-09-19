@@ -1,0 +1,69 @@
+<h2 id="before-you-start">Before you start</h2>
+<p>You need about ten minutes and these things:</p>
+<ul class="checklist">
+  <li>A computer with <strong>Google Chrome</strong> installed. The tool drives a Chrome window.</li>
+  <li>Your own <strong>LinkedIn account</strong>. The tool works through it; it never creates accounts for you.</li>
+  <li>Your <strong>resume as a PDF</strong> saved on the same computer.</li>
+  <li>An understanding that automating LinkedIn is against LinkedIn&rsquo;s rules and can put your account at risk. Read <a href="{{link:is-linkedin-auto-apply-safe}}">the safety guide</a> first.</li>
+</ul>
+<p>Magic Apply - Jobs is a beta. It has been tested against realistic mock sites, not every employer, so plan to watch your first few runs.</p>
+
+<h2 id="get-the-tool">Step 1: Get the tool</h2>
+<p><strong>Windows, the easy way:</strong> download <code>MagicApply.exe</code> from the <a href="{{RELEASES}}">Releases page</a> and double-click it. It is a single file: no installer and no Python. Windows may say it protected your PC because the file is not code-signed. Click <em>More info</em>, then <em>Run anyway</em>. You can compare the file&rsquo;s SHA-256 with the one in the release notes first.</p>
+<p><strong>Any system:</strong> download the project as a ZIP from <a href="{{REPO}}">GitHub</a>, unzip it, and double-click <code>start.bat</code> on Windows, <code>start.command</code> on macOS or <code>start.sh</code> on Linux. On Windows the launcher installs Python and Chrome if they are missing, so the first run takes a few minutes. The macOS and Linux launchers are included but less tested.</p>
+
+<h2 id="open-panel">Step 2: Open the control panel</h2>
+<p>Your browser opens the control panel by itself. The address, such as <code>http://127.0.0.1:5000</code>, is shown in the launcher window, and the panel can only be reached from your own computer. If you saved a backup file last time, click <strong>Restore from backup</strong> and every field fills back in.</p>
+
+<h2 id="profile">Step 3: Fill in your profile</h2>
+<p>Open the <strong>Profile</strong> tab and set your first and last name, <strong>Email for applications</strong>, <strong>Phone number</strong> and city. Set <strong>Default resume path</strong> to your resume PDF, for example <code>C:\Users\you\Documents\resume.pdf</code>. The tool will not apply on company sites until your name, email and phone are set, and it never sends template placeholders to an employer.</p>
+<p><em>Years of experience</em>, <em>desired salary</em>, <em>current salary</em> and <em>notice period</em> start out as &ldquo;not set&rdquo;, and the tool never types a number you did not give it. A form that asks for one of them is left for you, or for the AI if you turned it on. Fill them in if you want those applications to go through on their own.</p>
+<p>In the <strong>Account</strong> tab, your LinkedIn email and password are optional: leave them blank and sign in by hand in the Chrome window when it asks. To use Google sign-in on company sites, enter your account in <strong>Google account for company sites</strong>. The tool never types your Google password.</p>
+
+<h2 id="search">Step 4: Choose what to search for</h2>
+<p>In the <strong>Search</strong> tab, enter <strong>Search terms</strong> (job titles separated by commas), a <strong>Search location</strong> and how recent the jobs should be under <strong>Date posted</strong>. Leave <strong>Easy Apply only</strong> off to include jobs that apply on the company&rsquo;s own website, or turn it on to stay with Easy Apply.</p>
+<figure>
+  <div class="frame"><img src="{{base}}assets/screenshot-search.png" width="1264" height="859" loading="lazy" alt="The Search tab of the control panel with search terms, a location, a date filter and an Easy Apply only switch."></div>
+  <figcaption>The Search tab. The person and job titles shown are made up.</figcaption>
+</figure>
+
+<h2 id="safety-settings">Step 5: Choose your safety settings</h2>
+<p>Open <strong>Run settings</strong> and check three things:</p>
+<ul>
+  <li><strong>Max applications per day</strong> is 40 by default. Lower it if you want to be more careful; -1 turns the cap off.</li>
+  <li><strong>Pause before submitting</strong> is on by default, so the tool stops before each submission for you to review it. Leave it on for your first runs.</li>
+  <li><strong>Pause between clicks (seconds)</strong> sets how long the tool waits between actions. A higher number is slower and gentler.</li>
+</ul>
+<p>The <a href="{{link:is-linkedin-auto-apply-safe}}">safety guide</a> explains why these matter. Click <strong>Save</strong> when you are done: the tool only uses saved settings.</p>
+
+<h2 id="start">Step 6: Click Start</h2>
+<p>Go to the <strong>Run</strong> tab and click <strong>Start</strong>. It shows what it is about to search for, and if you changed a setting without saving it, offers to save it first. A Chrome window opens and begins working. Keep that window in the foreground and watch the <strong>Activity log</strong>. If LinkedIn or a site asks you to verify you are human, finish that screen yourself; the tool waits and then carries on. Click <strong>Stop</strong> at any time.</p>
+<figure>
+  <div class="frame"><img src="{{base}}assets/screenshot-run.png" width="1264" height="999" loading="lazy" alt="The Run tab with a Start button and an activity log showing a job applied for on a company website, with Google sign-in and form fields filled in."></div>
+  <figcaption>The Run tab while working through a job on a company website.</figcaption>
+</figure>
+
+<h2 id="results">Step 7: Review what happened</h2>
+<p>Every job it applied for appears in the <strong>Applied jobs</strong> list, where you can mark its status as replies arrive. Anything it could not finish goes to the <strong>Failed jobs</strong> list with a plain reason, a link to the company&rsquo;s page and a screenshot, so you can finish it by hand.</p>
+<figure>
+  <div class="frame"><img src="{{base}}assets/screenshot-failed-jobs.png" width="1264" height="319" loading="lazy" alt="The Failed Applications page: a table of jobs it could not finish, each with the reason and a link to the company's application."></div>
+  <figcaption>The Failed jobs list. It says why, so you know what to do next.</figcaption>
+</figure>
+
+<h2 id="finish">Step 8: Save a backup and finish</h2>
+<p>The tool remembers nothing between sessions. Click <strong>Download backup</strong> if you want your settings and history next time, then <strong>Finish &amp; erase</strong>. If something went wrong, click <strong>Download report</strong> first: it saves your recent log and why jobs failed, with your personal details masked, ready to attach to a <a href="{{REPO}}/issues">GitHub issue</a>.</p>
+
+<h2 id="troubleshooting">Troubleshooting</h2>
+<ul>
+  <li><strong>Windows says it protected your PC.</strong> Click <em>More info</em>, then <em>Run anyway</em>. The file is not code-signed.</li>
+  <li><strong>Chrome does not open, or the driver fails.</strong> Make sure Google Chrome is installed and up to date, and leave <em>Manage Chrome driver automatically</em> on in Run settings.</li>
+  <li><strong>It asks you to verify you are human.</strong> Complete it in the Chrome window. The tool never tries to get past a CAPTCHA.</li>
+  <li><strong>Nothing was applied.</strong> Your filters may be too narrow, the jobs may already be in your Applied list, or the daily cap may be reached. The Activity log says which.</li>
+  <li><strong>LinkedIn says you have reached a limit.</strong> See <a href="{{link:linkedin-easy-apply-limit}}">the Easy Apply limit guide</a>.</li>
+  <li><strong>Company sites keep failing.</strong> Read <a href="{{link:apply-on-company-websites}}">how the tool handles them</a>; some sites need you.</li>
+</ul>
+
+<div class="cta-band">
+  <p><strong>Ready to try it?</strong> The Windows .exe is a single file, and everything is free and open source.</p>
+  <a class="btn btn-primary" href="{{RELEASES}}">Download the tool</a>
+</div>

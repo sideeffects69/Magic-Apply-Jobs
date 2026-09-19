@@ -161,7 +161,13 @@ These are real screenshots of the control panel. The person, companies and jobs 
 
 **Does it store or upload my data?** No. It runs on your computer and erases your details when you close it. If you turn on the optional AI answers, the question, the job description and your "about me" text are sent to the AI provider you choose.
 
-The [website](https://sideeffects69.github.io/Magic-Apply-Jobs/#faq) has the full FAQ.
+The [website](https://sideeffects69.github.io/Magic-Apply-Jobs/) has the full [FAQ](https://sideeffects69.github.io/Magic-Apply-Jobs/faq/) and longer guides:
+
+- [How to auto apply on LinkedIn, step by step](https://sideeffects69.github.io/Magic-Apply-Jobs/how-to-auto-apply-on-linkedin/)
+- [LinkedIn Easy Apply limit: how many per day?](https://sideeffects69.github.io/Magic-Apply-Jobs/linkedin-easy-apply-limit/)
+- [Is LinkedIn auto apply safe? The risks, plainly](https://sideeffects69.github.io/Magic-Apply-Jobs/is-linkedin-auto-apply-safe/)
+- [Auto apply on company career sites: how it works](https://sideeffects69.github.io/Magic-Apply-Jobs/apply-on-company-websites/)
+- [Free LinkedIn auto apply tools: open source vs extensions](https://sideeffects69.github.io/Magic-Apply-Jobs/free-linkedin-auto-apply-tools/)
 
 ## Manual install and configuration
 

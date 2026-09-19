@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Auto Apply on Company Career Sites: How It Works</title>
+<meta name="description" content="Most LinkedIn jobs send you to the employer&#x27;s own site. See how Magic Apply - Jobs opens it, signs in with Google and fills the form, and where it stops.">
+<link rel="canonical" href="https://sideeffects69.github.io/Magic-Apply-Jobs/apply-on-company-websites/">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="theme-color" content="#4f46e5">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="stylesheet" href="../assets/site.css">
+
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Magic Apply - Jobs">
+<meta property="og:title" content="Auto Apply on Company Career Sites: How It Works">
+<meta property="og:description" content="Most LinkedIn jobs send you to the employer&#x27;s own site. See how Magic Apply - Jobs opens it, signs in with Google and fills the form, and where it stops.">
+<meta property="og:url" content="https://sideeffects69.github.io/Magic-Apply-Jobs/apply-on-company-websites/">
+<meta property="og:image" content="https://sideeffects69.github.io/Magic-Apply-Jobs/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Magic Apply - Jobs: free, open-source job application assistant, shown next to its control panel.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Auto Apply on Company Career Sites: How It Works">
+<meta name="twitter:description" content="Most LinkedIn jobs send you to the employer&#x27;s own site. See how Magic Apply - Jobs opens it, signs in with Google and fills the form, and where it stops.">
+<meta name="twitter:image" content="https://sideeffects69.github.io/Magic-Apply-Jobs/og-image.png">
+<meta name="twitter:image:alt" content="Magic Apply - Jobs: free, open-source job application assistant, shown next to its control panel.">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Auto apply on company career sites: how it works",
+  "description": "Most LinkedIn jobs send you to the employer's own site. See how Magic Apply - Jobs opens it, signs in with Google and fills the form, and where it stops.",
+  "image": "https://sideeffects69.github.io/Magic-Apply-Jobs/og-image.png",
+  "datePublished": "2026-09-19",
+  "dateModified": "2026-09-19",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://sideeffects69.github.io/Magic-Apply-Jobs/apply-on-company-websites/"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "Magic Apply - Jobs",
+    "url": "https://sideeffects69.github.io/Magic-Apply-Jobs/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Magic Apply - Jobs",
+    "url": "https://sideeffects69.github.io/Magic-Apply-Jobs/",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://sideeffects69.github.io/Magic-Apply-Jobs/apple-touch-icon.png"
+    }
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://sideeffects69.github.io/Magic-Apply-Jobs/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Applying on company websites",
+      "item": "https://sideeffects69.github.io/Magic-Apply-Jobs/apply-on-company-websites/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Will it work on any company website?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "It handles ordinary application forms, including multi-page flows and forms inside iframes. Some sites will always need you: those that force an email-and-password account with no Google option, CAPTCHAs, and heavily custom questions. Anything it cannot finish is saved to a Failed jobs list with the reason and the company's link. So far it has been tested against realistic local mock sites, not every employer, so treat it as a beta and watch the first few runs."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does it work with Workday, Greenhouse or Lever?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "We have not verified it against specific applicant tracking systems, so we do not claim support for any of them. Forms that are a single public page are the easiest case. Some systems, such as Workday, commonly ask you to create an account for each employer; if a site has no Google sign-in option, the tool leaves the job for you and saves it, with the link, to the Failed jobs list."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does it type my Google password or solve CAPTCHAs?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. It never types a Google password and never gets past a CAPTCHA or 2-step verification. When Google or a site asks for one, the tool waits while you finish that screen in the browser window, then carries on."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does it submit applications without me checking?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Only if you allow it. Pause before submitting is on by default, so the tool stops before each submission for you to review. Turn it off in Run settings for hands-free running. It never submits with a required question empty and never invents an answer."
+      }
+    }
+  ]
+}
+</script>
+</head>
+
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="../" aria-label="Magic Apply - Jobs, home">
+      <img src="../favicon.svg" width="30" height="30" alt="">
+      <span>Magic Apply - Jobs</span> <span class="pill">Beta</span>
+    </a>
+    <nav class="main" aria-label="Main">
+      <a class="hide-sm" href="../how-to-auto-apply-on-linkedin/">How to</a>
+      <a class="hide-sm" href="../linkedin-easy-apply-limit/">Easy Apply limit</a>
+      <a class="hide-sm" href="../is-linkedin-auto-apply-safe/">Safety</a>
+      <a class="hide-sm" href="../apply-on-company-websites/">Company sites</a>
+      <a class="hide-sm" href="../faq/">FAQ</a>
+      <a class="btn btn-primary btn-sm" href="https://github.com/sideeffects69/Magic-Apply-Jobs/releases">Download</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+<div class="wrap narrow">
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="../">Home</a> <span aria-hidden="true">&rsaquo;</span> <span aria-current="page">Applying on company websites</span></nav>
+  <article class="article">
+    <header>
+      <h1>Auto apply on company career sites: how it works</h1>
+      <p class="lede">Most jobs on LinkedIn are not Easy Apply. They send you to the employer&#x27;s own application page, and that is where most tools stop. Here is what Magic Apply - Jobs does there, and where it hands over to you.</p>
+      <p class="meta">Updated <time datetime="2026-09-19">19 September 2026</time></p>
+    </header>
+    <nav class="toc" aria-label="On this page">
+  <strong>On this page</strong>
+  <ol>
+    <li><a href="#what-happens">What happens on a company&rsquo;s site</a></li>
+    <li><a href="#kinds-of-sites">Three kinds of application page</a></li>
+    <li><a href="#guardrails">The rules it follows</a></li>
+    <li><a href="#hands-over">When it hands over to you</a></li>
+    <li><a href="#honest-limits">Honest limits</a></li>
+  </ol>
+</nav>
+    <h2 id="what-happens">What happens on a company&rsquo;s site</h2>
+<p>In the <strong>Search</strong> tab, <strong>Easy Apply only</strong> is off by default, so the tool also handles jobs that send you off LinkedIn. For each one it:</p>
+<ol>
+  <li><strong>Opens the company&rsquo;s application page</strong> from the LinkedIn job.</li>
+  <li><strong>Signs in with Google if the site asks.</strong> It looks for a &ldquo;Sign in&rdquo;, &ldquo;Sign up&rdquo; or &ldquo;Continue with Google&rdquo; button on the page, in a pop-up or inside Google&rsquo;s own frame, clicks it, and picks the account you set under <em>Account &rarr; Google account for company sites</em>.</li>
+  <li><strong>Uploads your resume first</strong>, so the site&rsquo;s own resume autofill runs before anything is typed.</li>
+  <li><strong>Fills only what is still empty.</strong> A field the site already filled, or that you typed, is never replaced.</li>
+  <li><strong>Clicks Next, Continue and Submit</strong> page after page, and stops when the site confirms the application.</li>
+</ol>
+<figure>
+  <div class="frame"><img src="../assets/screenshot-run.png" width="1264" height="999" loading="lazy" alt="The activity log of a run: it opens a company application, clicks Continue with Google, uploads the resume, fills fields and clicks Submit application."></div>
+  <figcaption>The activity log of a company-site application, using the tool&rsquo;s real messages. The company and person shown are made up.</figcaption>
+</figure>
+
+<h2 id="kinds-of-sites">Three kinds of application page</h2>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>What the site is like</th><th>What the tool does</th></tr></thead>
+  <tbody>
+    <tr><td><strong>A single public form.</strong> No account needed.</td><td>Uploads your resume, fills the empty fields and submits, after your review if <em>Pause before submitting</em> is on.</td></tr>
+    <tr><td><strong>Offers &ldquo;Continue with Google&rdquo;.</strong></td><td>Clicks the Google button and picks your account. If Google asks for a password, 2-step verification or more than a sign-in, it waits for you.</td></tr>
+    <tr><td><strong>Forces an email-and-password account, with no Google option.</strong></td><td>Does not create accounts. It saves the job, with the company&rsquo;s link and the reason, to the Failed jobs list so you can finish it by hand.</td></tr>
+  </tbody>
+</table>
+</div>
+<p>Some applicant tracking systems commonly ask you to create an account for each employer, and those fall into the third row. We have not verified the tool against specific systems by name, so we do not claim support for any of them. See <a href="../faq/">the FAQ</a>.</p>
+
+<h2 id="guardrails">The rules it follows</h2>
+<ul>
+  <li><strong>It never submits with a required question empty</strong>, and it <strong>never invents an answer</strong>. A question it cannot answer from your profile goes to the AI if you turned that on. Otherwise it waits for you in the browser window (<em>Wait for me on hard steps</em>). If you do not answer in time, the job goes to the Failed jobs list, never submitted half empty.</li>
+  <li><strong>It never types a Google password and never gets past a CAPTCHA or 2-step verification.</strong> It waits while you finish that screen, then carries on. If Google asks for more than a sign-in, such as access to Drive or Gmail, it stops and lets you decide, and it never picks a Google account by guessing.</li>
+  <li><strong>It never sends template placeholders.</strong> Your name, email and phone must be set first, and values such as &ldquo;First&rdquo; or &ldquo;123 Main Street&rdquo; are never sent to an employer.</li>
+  <li><strong>It only says you are authorised to work in your own country.</strong> A question about another country is left for you, and it does not assume you will relocate.</li>
+  <li><strong>Marketing opt-ins stay unticked.</strong> Privacy and terms consent boxes are ticked.</li>
+  <li><strong>Number questions are answered by range.</strong> Three years goes in &ldquo;3-5 years&rdquo;, never in &ldquo;10-13 years&rdquo;.</li>
+</ul>
+
+<h2 id="hands-over">When it hands over to you</h2>
+<p>Career sites are all different. Expect to be needed for CAPTCHAs, sites that force an email-and-password account, heavily custom dropdowns and file-upload-only steps. When the tool cannot finish, the job goes to the <strong>Failed jobs</strong> list with a plain reason, a link to the company&rsquo;s page and a screenshot.</p>
+<figure>
+  <div class="frame"><img src="../assets/screenshot-failed-jobs.png" width="1264" height="319" loading="lazy" alt="The Failed Applications page listing jobs the tool could not finish, each with a plain-language reason and a link to the company's application."></div>
+  <figcaption>Failed jobs come with a reason and a link, so you can finish them yourself.</figcaption>
+</figure>
+
+<h2 id="honest-limits">Honest limits</h2>
+<p>The tool works on ordinary forms, including forms inside iframes, styled radio buttons and multi-page flows. It has been tested against realistic local mock sites, not against every employer on the internet, so treat it as a beta, keep <em>Pause before submitting</em> on, and watch your first runs. If something goes wrong, <strong>Download report</strong> before you close the tool and attach it to an <a href="https://github.com/sideeffects69/Magic-Apply-Jobs/issues">issue</a>: it shows your recent log and why jobs failed, with your personal details masked.</p>
+<p>Using any tool on LinkedIn also carries account risk. Read <a href="../is-linkedin-auto-apply-safe/">Is LinkedIn auto apply safe?</a>, and see <a href="../linkedin-easy-apply-limit/">the Easy Apply limit guide</a> for why company sites matter when Easy Apply runs out.</p>
+
+<div class="cta-band">
+  <p><strong>See it for yourself.</strong> Free, open source, and it keeps no data after you close it.</p>
+  <a class="btn btn-primary" href="https://github.com/sideeffects69/Magic-Apply-Jobs/releases">Download the tool</a>
+</div>
+    <section class="faq-block" id="faq">
+  <h2>Frequently asked questions</h2>
+    <details class="faq">
+      <summary>Will it work on any company website?</summary>
+      <p>It handles ordinary application forms, including multi-page flows and forms inside iframes. Some sites will always need you: those that force an email-and-password account with no Google option, CAPTCHAs, and heavily custom questions. Anything it cannot finish is saved to a Failed jobs list with the reason and the company&#x27;s link. So far it has been tested against realistic local mock sites, not every employer, so treat it as a beta and watch the first few runs.</p>
+    </details>
+    <details class="faq">
+      <summary>Does it work with Workday, Greenhouse or Lever?</summary>
+      <p>We have not verified it against specific applicant tracking systems, so we do not claim support for any of them. Forms that are a single public page are the easiest case. Some systems, such as Workday, commonly ask you to create an account for each employer; if a site has no Google sign-in option, the tool leaves the job for you and saves it, with the link, to the Failed jobs list.</p>
+    </details>
+    <details class="faq">
+      <summary>Does it type my Google password or solve CAPTCHAs?</summary>
+      <p>No. It never types a Google password and never gets past a CAPTCHA or 2-step verification. When Google or a site asks for one, the tool waits while you finish that screen in the browser window, then carries on.</p>
+    </details>
+    <details class="faq">
+      <summary>Does it submit applications without me checking?</summary>
+      <p>Only if you allow it. Pause before submitting is on by default, so the tool stops before each submission for you to review. Turn it off in Run settings for hands-free running. It never submits with a required question empty and never invents an answer.</p>
+    </details>
+</section>
+    <section class="related-block" id="related">
+  <h2>Related guides</h2>
+  <div class="related">
+    <a href="../linkedin-easy-apply-limit/">LinkedIn Easy Apply limit<span>What people report about LinkedIn&#x27;s daily Easy Apply limit, what happens when you reach it, and how to keep going by applying on company sites.</span></a>
+    <a href="../is-linkedin-auto-apply-safe/">Is LinkedIn auto apply safe?<span>LinkedIn&#x27;s rules ban tools that automate activity on its site. Here is the real risk to your account, what raises it, and how to keep your use modest.</span></a>
+    <a href="../how-to-auto-apply-on-linkedin/">How to auto apply on LinkedIn<span>Set up a free, open-source LinkedIn auto apply tool in minutes: download it, fill in your profile, pick your search and click Start. No coding needed.</span></a>
+  </div>
+</section>
+  </article>
+</div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="cols">
+      <div>
+        <p><strong>Magic Apply - Jobs</strong></p>
+        <p>Free and open source under the MIT License.</p>
+      </div>
+      <div>
+        <p><strong>Guides</strong></p>
+        <ul aria-label="Guides">
+        <li><a href="../how-to-auto-apply-on-linkedin/">How to</a></li>
+        <li><a href="../linkedin-easy-apply-limit/">Easy Apply limit</a></li>
+        <li><a href="../is-linkedin-auto-apply-safe/">Safety</a></li>
+        <li><a href="../apply-on-company-websites/">Company sites</a></li>
+        <li><a href="../free-linkedin-auto-apply-tools/">Free tools</a></li>
+        <li><a href="../faq/">FAQ</a></li>
+        </ul>
+      </div>
+      <div>
+        <p><strong>Project</strong></p>
+        <ul aria-label="Project links">
+          <li><a href="https://github.com/sideeffects69/Magic-Apply-Jobs">Source on GitHub</a></li>
+          <li><a href="https://github.com/sideeffects69/Magic-Apply-Jobs/releases">Releases</a></li>
+          <li><a href="https://github.com/sideeffects69/Magic-Apply-Jobs/issues">Report an issue</a></li>
+          <li><a href="https://github.com/sideeffects69/Magic-Apply-Jobs/blob/main/CONTRIBUTING.md">Contribute</a></li>
+          <li><a href="https://github.com/sideeffects69/Magic-Apply-Jobs/blob/main/LICENSE">License</a></li>
+          <li><a href="../sitemap/">Site map</a></li>
+        </ul>
+      </div>
+    </div>
+    <p class="legal">Magic Apply - Jobs is an independent open-source project. It is not affiliated with, endorsed by or sponsored by LinkedIn or Google; those names belong to their owners. The tool acts through your own accounts and is provided as is, without warranty. You are responsible for following the terms of every website you use it with. Screenshots on this site use made-up example data.</p>
+  </div>
+</footer>
+</body>
+</html>

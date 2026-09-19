@@ -1,0 +1,20 @@
+# Magic Apply - Jobs
+
+> Free, open-source tool that finds jobs on LinkedIn, applies with Easy Apply, and fills in company career-site application forms. It runs on the user's own computer, works through their own accounts, and keeps no data after it is closed. It is a beta under the MIT License, and it is not affiliated with LinkedIn or Google.
+
+Automating LinkedIn is against LinkedIn's rules and can lead to account restrictions. The guides below say so plainly and cover the daily Easy Apply limit, how the tool behaves on company websites, and what it does not claim to do.
+
+## Guides
+
+- [How to auto apply on LinkedIn (free, step by step)](https://sideeffects69.github.io/Magic-Apply-Jobs/how-to-auto-apply-on-linkedin/): download, set up a profile, choose a search and start a supervised run.
+- [LinkedIn Easy Apply limit](https://sideeffects69.github.io/Magic-Apply-Jobs/linkedin-easy-apply-limit/): what people report about the daily limit, and how the tool carries on with company sites when it is reached.
+- [Is LinkedIn auto apply safe?](https://sideeffects69.github.io/Magic-Apply-Jobs/is-linkedin-auto-apply-safe/): LinkedIn's rules on automation, what raises the risk, and how to keep use modest.
+- [Auto apply on company career sites](https://sideeffects69.github.io/Magic-Apply-Jobs/apply-on-company-websites/): how it opens the employer's application, signs in with Google, fills the form, and where it hands over to you.
+- [Free LinkedIn auto apply tools compared](https://sideeffects69.github.io/Magic-Apply-Jobs/free-linkedin-auto-apply-tools/): subscription services, browser extensions and free open-source programs, with trade-offs.
+- [FAQ](https://sideeffects69.github.io/Magic-Apply-Jobs/faq/): cost, safety, limits, data, AI answers and setup.
+
+## Project
+
+- [Source code (MIT License)](https://github.com/sideeffects69/Magic-Apply-Jobs)
+- [Downloads (releases)](https://github.com/sideeffects69/Magic-Apply-Jobs/releases)
+- [Sitemap](https://sideeffects69.github.io/Magic-Apply-Jobs/sitemap.xml)

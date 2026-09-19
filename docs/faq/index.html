@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Magic Apply - Jobs FAQ: Safety, Limits, Data and Setup</title>
+<meta name="description" content="Answers about Magic Apply - Jobs: cost, LinkedIn account safety, daily limits, company websites, your data, AI answers, setup and reporting problems.">
+<link rel="canonical" href="https://sideeffects69.github.io/Magic-Apply-Jobs/faq/">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="theme-color" content="#4f46e5">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="stylesheet" href="../assets/site.css">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Magic Apply - Jobs">
+<meta property="og:title" content="Magic Apply - Jobs FAQ: Safety, Limits, Data and Setup">
+<meta property="og:description" content="Answers about Magic Apply - Jobs: cost, LinkedIn account safety, daily limits, company websites, your data, AI answers, setup and reporting problems.">
+<meta property="og:url" content="https://sideeffects69.github.io/Magic-Apply-Jobs/faq/">
+<meta property="og:image" content="https://sideeffects69.github.io/Magic-Apply-Jobs/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Magic Apply - Jobs: free, open-source job application assistant, shown next to its control panel.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Magic Apply - Jobs FAQ: Safety, Limits, Data and Setup">
+<meta name="twitter:description" content="Answers about Magic Apply - Jobs: cost, LinkedIn account safety, daily limits, company websites, your data, AI answers, setup and reporting problems.">
+<meta name="twitter:image" content="https://sideeffects69.github.io/Magic-Apply-Jobs/og-image.png">
+<meta name="twitter:image:alt" content="Magic Apply - Jobs: free, open-source job application assistant, shown next to its control panel.">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://sideeffects69.github.io/Magic-Apply-Jobs/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "FAQ",
+      "item": "https://sideeffects69.github.io/Magic-Apply-Jobs/faq/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is Magic Apply - Jobs?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "It is a free, open-source program that runs on your own computer. It searches LinkedIn with your own account, applies with Easy Apply, and for jobs that send you to a company's own website it opens the application, signs in with Google if the site asks, and fills in the form from your details."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is Magic Apply - Jobs really free?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. It is free and open source under the MIT License, with no account, subscription or paid tier. You can read, change and share the code."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is it a Chrome extension?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. It is a program that runs on your computer and controls a Chrome window, with a control panel that opens in your browser. Nothing is installed into Chrome, and there is no cloud service or account."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is it safe for my LinkedIn account?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "LinkedIn has rules about automated activity, and it may limit or restrict accounts that break them. You use the tool at your own risk. Keep the daily cap low, watch your first runs and read the disclaimer before you start."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I get banned for using an auto apply tool?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, it is possible. LinkedIn's rules prohibit third-party software that automates activity on its site, and it says members who break them risk having their accounts restricted or shut down. No tool, this one included, can make that risk zero. Keeping volume modest and reviewing your first runs lowers it but does not remove it."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How many jobs can it apply to per day?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "You choose. The daily cap is 40 by default and you can change it in Run settings, or set it to -1 for no cap. LinkedIn has not published an official Easy Apply limit, but many people report being blocked after roughly 50 Easy Apply submissions in 24 hours, so a cap below that is sensible."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What happens when LinkedIn's Easy Apply limit is reached?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The tool notices LinkedIn's limit message. If company-website applying is on, it carries on with jobs that apply on company sites and skips Easy Apply jobs for the rest of the run. If it is off, it stops and tells you to resume tomorrow."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I still apply for jobs after reaching the limit?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, on the employer's own website. The limit is reported to apply to Easy Apply submissions, so jobs that send you to a company site are not affected. That is why Magic Apply - Jobs carries on with company-site jobs when it sees the limit."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Will it work on any company website?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "It handles ordinary application forms, including multi-page flows and forms inside iframes. Some sites will always need you: those that force an email-and-password account with no Google option, CAPTCHAs, and heavily custom questions. Anything it cannot finish is saved to a Failed jobs list with the reason and the company's link. So far it has been tested against realistic local mock sites, not every employer, so treat it as a beta and watch the first few runs."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does it work with Workday, Greenhouse or Lever?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "We have not verified it against specific applicant tracking systems, so we do not claim support for any of them. Forms that are a single public page are the easiest case. Some systems, such as Workday, commonly ask you to create an account for each employer; if a site has no Google sign-in option, the tool leaves the job for you and saves it, with the link, to the Failed jobs list."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does it submit applications without me checking?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Only if you allow it. Pause before submitting is on by default, so the tool stops before each submission for you to review. Turn it off in Run settings for hands-free running. It never submits with a required question empty and never invents an answer."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does it type my Google password or solve CAPTCHAs?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. It never types a Google password and never gets past a CAPTCHA or 2-step verification. When Google or a site asks for one, the tool waits while you finish that screen in the browser window, then carries on."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can it answer screening questions with AI?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, optionally. Add an API key for OpenAI, Gemini or DeepSeek in the Account tab and turn on AI answers. It is off by default. When it is on, the question, the job description and the about-me text you wrote are sent to the provider you chose."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does it store or upload my personal data?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. It runs on your own computer, keeps your details in a private folder only while it is open, and erases them when you close it. If you turn on the optional AI answers, the question, the job description and the about-me text you wrote are sent to the AI provider you choose. Otherwise nothing leaves your computer except the applications themselves."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What do I need to run it?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Google Chrome. The Windows .exe needs nothing else. On Windows the start.bat launcher also installs Python and Chrome if they are missing. On macOS and Linux, install Python 3.10 or newer and Chrome first, then double-click the launcher; those two launchers are included but less tested than the Windows ones."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does it work on Mac and Linux?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "There are launchers for both (start.command and start.sh) and the code is cross-platform, but the maintainers test on Windows, so the macOS and Linux launchers are less tested. The portable .exe is Windows only."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Windows says it protected my PC. Is the file safe?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The .exe is not code-signed, so Windows SmartScreen shows a warning the first time. Click More info, then Run anyway. You can compare the file's SHA-256 with the one on the release page, or build the exe yourself from the source with build_exe.bat. Some antivirus programs flag anything that drives a browser."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I keep my settings between sessions?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Click Download backup before you close the tool, and Restore from backup next time. Nothing is kept otherwise: the tool erases your details when it closes. Restoring your backup also lets it count the applications you already made today, so the daily cap stays accurate."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Do I need to know how to code?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. You set everything up in a control panel that opens in your browser and run the tool with a button. There are no code files to edit."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I report a problem?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Click Download report in the control panel before you close it. It saves a text file with your recent log and why jobs failed, with your name, email, phone, passwords and links masked. Read it, then attach it to an issue on GitHub."
+      }
+    }
+  ]
+}
+</script>
+</head>
+
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="../" aria-label="Magic Apply - Jobs, home">
+      <img src="../favicon.svg" width="30" height="30" alt="">
+      <span>Magic Apply - Jobs</span> <span class="pill">Beta</span>
+    </a>
+    <nav class="main" aria-label="Main">
+      <a class="hide-sm" href="../how-to-auto-apply-on-linkedin/">How to</a>
+      <a class="hide-sm" href="../linkedin-easy-apply-limit/">Easy Apply limit</a>
+      <a class="hide-sm" href="../is-linkedin-auto-apply-safe/">Safety</a>
+      <a class="hide-sm" href="../apply-on-company-websites/">Company sites</a>
+      <a class="hide-sm" href="../faq/">FAQ</a>
+      <a class="btn btn-primary btn-sm" href="https://github.com/sideeffects69/Magic-Apply-Jobs/releases">Download</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+<div class="wrap narrow">
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="../">Home</a> <span aria-hidden="true">&rsaquo;</span> <span aria-current="page">FAQ</span></nav>
+  <article class="article">
+    <header>
+      <h1>Frequently asked questions</h1>
+      <p class="lede">Straight answers about what the tool does, what it does not do, and what it costs you in risk, time and data.</p>
+      <p class="meta">Updated <time datetime="2026-09-19">19 September 2026</time></p>
+    </header>
+    
+    <p>Cannot find your question? <a href="https://github.com/sideeffects69/Magic-Apply-Jobs/issues">Ask on GitHub</a>. For longer answers, read the guides on <a href="../is-linkedin-auto-apply-safe/">account safety</a>, <a href="../linkedin-easy-apply-limit/">the Easy Apply limit</a> and <a href="../apply-on-company-websites/">company websites</a>.</p>
+    <section class="faq-block" id="faq">
+    <details class="faq">
+      <summary>What is Magic Apply - Jobs?</summary>
+      <p>It is a free, open-source program that runs on your own computer. It searches LinkedIn with your own account, applies with Easy Apply, and for jobs that send you to a company&#x27;s own website it opens the application, signs in with Google if the site asks, and fills in the form from your details.</p>
+    </details>
+    <details class="faq">
+      <summary>Is Magic Apply - Jobs really free?</summary>
+      <p>Yes. It is free and open source under the MIT License, with no account, subscription or paid tier. You can read, change and share the code.</p>
+    </details>
+    <details class="faq">
+      <summary>Is it a Chrome extension?</summary>
+      <p>No. It is a program that runs on your computer and controls a Chrome window, with a control panel that opens in your browser. Nothing is installed into Chrome, and there is no cloud service or account.</p>
+    </details>
+    <details class="faq">
+      <summary>Is it safe for my LinkedIn account?</summary>
+      <p>LinkedIn has rules about automated activity, and it may limit or restrict accounts that break them. You use the tool at your own risk. Keep the daily cap low, watch your first runs and read the disclaimer before you start.</p>
+    </details>
+    <details class="faq">
+      <summary>Can I get banned for using an auto apply tool?</summary>
+      <p>Yes, it is possible. LinkedIn&#x27;s rules prohibit third-party software that automates activity on its site, and it says members who break them risk having their accounts restricted or shut down. No tool, this one included, can make that risk zero. Keeping volume modest and reviewing your first runs lowers it but does not remove it.</p>
+    </details>
+    <details class="faq">
+      <summary>How many jobs can it apply to per day?</summary>
+      <p>You choose. The daily cap is 40 by default and you can change it in Run settings, or set it to -1 for no cap. LinkedIn has not published an official Easy Apply limit, but many people report being blocked after roughly 50 Easy Apply submissions in 24 hours, so a cap below that is sensible.</p>
+    </details>
+    <details class="faq">
+      <summary>What happens when LinkedIn&#x27;s Easy Apply limit is reached?</summary>
+      <p>The tool notices LinkedIn&#x27;s limit message. If company-website applying is on, it carries on with jobs that apply on company sites and skips Easy Apply jobs for the rest of the run. If it is off, it stops and tells you to resume tomorrow.</p>
+    </details>
+    <details class="faq">
+      <summary>Can I still apply for jobs after reaching the limit?</summary>
+      <p>Yes, on the employer&#x27;s own website. The limit is reported to apply to Easy Apply submissions, so jobs that send you to a company site are not affected. That is why Magic Apply - Jobs carries on with company-site jobs when it sees the limit.</p>
+    </details>
+    <details class="faq">
+      <summary>Will it work on any company website?</summary>
+      <p>It handles ordinary application forms, including multi-page flows and forms inside iframes. Some sites will always need you: those that force an email-and-password account with no Google option, CAPTCHAs, and heavily custom questions. Anything it cannot finish is saved to a Failed jobs list with the reason and the company&#x27;s link. So far it has been tested against realistic local mock sites, not every employer, so treat it as a beta and watch the first few runs.</p>
+    </details>
+    <details class="faq">
+      <summary>Does it work with Workday, Greenhouse or Lever?</summary>
+      <p>We have not verified it against specific applicant tracking systems, so we do not claim support for any of them. Forms that are a single public page are the easiest case. Some systems, such as Workday, commonly ask you to create an account for each employer; if a site has no Google sign-in option, the tool leaves the job for you and saves it, with the link, to the Failed jobs list.</p>
+    </details>
+    <details class="faq">
+      <summary>Does it submit applications without me checking?</summary>
+      <p>Only if you allow it. Pause before submitting is on by default, so the tool stops before each submission for you to review. Turn it off in Run settings for hands-free running. It never submits with a required question empty and never invents an answer.</p>
+    </details>
+    <details class="faq">
+      <summary>Does it type my Google password or solve CAPTCHAs?</summary>
+      <p>No. It never types a Google password and never gets past a CAPTCHA or 2-step verification. When Google or a site asks for one, the tool waits while you finish that screen in the browser window, then carries on.</p>
+    </details>
+    <details class="faq">
+      <summary>Can it answer screening questions with AI?</summary>
+      <p>Yes, optionally. Add an API key for OpenAI, Gemini or DeepSeek in the Account tab and turn on AI answers. It is off by default. When it is on, the question, the job description and the about-me text you wrote are sent to the provider you chose.</p>
+    </details>
+    <details class="faq">
+      <summary>Does it store or upload my personal data?</summary>
+      <p>No. It runs on your own computer, keeps your details in a private folder only while it is open, and erases them when you close it. If you turn on the optional AI answers, the question, the job description and the about-me text you wrote are sent to the AI provider you choose. Otherwise nothing leaves your computer except the applications themselves.</p>
+    </details>
+    <details class="faq">
+      <summary>What do I need to run it?</summary>
+      <p>Google Chrome. The Windows .exe needs nothing else. On Windows the start.bat launcher also installs Python and Chrome if they are missing. On macOS and Linux, install Python 3.10 or newer and Chrome first, then double-click the launcher; those two launchers are included but less tested than the Windows ones.</p>
+    </details>
+    <details class="faq">
+      <summary>Does it work on Mac and Linux?</summary>
+      <p>There are launchers for both (start.command and start.sh) and the code is cross-platform, but the maintainers test on Windows, so the macOS and Linux launchers are less tested. The portable .exe is Windows only.</p>
+    </details>
+    <details class="faq">
+      <summary>Windows says it protected my PC. Is the file safe?</summary>
+      <p>The .exe is not code-signed, so Windows SmartScreen shows a warning the first time. Click More info, then Run anyway. You can compare the file&#x27;s SHA-256 with the one on the release page, or build the exe yourself from the source with build_exe.bat. Some antivirus programs flag anything that drives a browser.</p>
+    </details>
+    <details class="faq">
+      <summary>How do I keep my settings between sessions?</summary>
+      <p>Click Download backup before you close the tool, and Restore from backup next time. Nothing is kept otherwise: the tool erases your details when it closes. Restoring your backup also lets it count the applications you already made today, so the daily cap stays accurate.</p>
+    </details>
+    <details class="faq">
+      <summary>Do I need to know how to code?</summary>
+      <p>No. You set everything up in a control panel that opens in your browser and run the tool with a button. There are no code files to edit.</p>
+    </details>
+    <details class="faq">
+      <summary>How do I report a problem?</summary>
+      <p>Click Download report in the control panel before you close it. It saves a text file with your recent log and why jobs failed, with your name, email, phone, passwords and links masked. Read it, then attach it to an issue on GitHub.</p>
+    </details>
+</section>
+    <section class="related-block" id="related">
+  <h2>Related guides</h2>
+  <div class="related">
+    <a href="../how-to-auto-apply-on-linkedin/">How to auto apply on LinkedIn<span>Set up a free, open-source LinkedIn auto apply tool in minutes: download it, fill in your profile, pick your search and click Start. No coding needed.</span></a>
+    <a href="../is-linkedin-auto-apply-safe/">Is LinkedIn auto apply safe?<span>LinkedIn&#x27;s rules ban tools that automate activity on its site. Here is the real risk to your account, what raises it, and how to keep your use modest.</span></a>
+    <a href="../free-linkedin-auto-apply-tools/">Free LinkedIn auto apply tools<span>Compare the kinds of LinkedIn auto apply tools: subscription services, browser extensions and free open-source programs, with honest trade-offs for each.</span></a>
+  </div>
+</section>
+  </article>
+</div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="cols">
+      <div>
+        <p><strong>Magic Apply - Jobs</strong></p>
+        <p>Free and open source under the MIT License.</p>
+      </div>
+      <div>
+        <p><strong>Guides</strong></p>
+        <ul aria-label="Guides">
+        <li><a href="../how-to-auto-apply-on-linkedin/">How to</a></li>
+        <li><a href="../linkedin-easy-apply-limit/">Easy Apply limit</a></li>
+        <li><a href="../is-linkedin-auto-apply-safe/">Safety</a></li>
+        <li><a href="../apply-on-company-websites/">Company sites</a></li>
+        <li><a href="../free-linkedin-auto-apply-tools/">Free tools</a></li>
+        <li><a href="../faq/">FAQ</a></li>
+        </ul>
+      </div>
+      <div>
+        <p><strong>Project</strong></p>
+        <ul aria-label="Project links">
+          <li><a href="https://github.com/sideeffects69/Magic-Apply-Jobs">Source on GitHub</a></li>
+          <li><a href="https://github.com/sideeffects69/Magic-Apply-Jobs/releases">Releases</a></li>
+          <li><a href="https://github.com/sideeffects69/Magic-Apply-Jobs/issues">Report an issue</a></li>
+          <li><a href="https://github.com/sideeffects69/Magic-Apply-Jobs/blob/main/CONTRIBUTING.md">Contribute</a></li>
+          <li><a href="https://github.com/sideeffects69/Magic-Apply-Jobs/blob/main/LICENSE">License</a></li>
+          <li><a href="../sitemap/">Site map</a></li>
+        </ul>
+      </div>
+    </div>
+    <p class="legal">Magic Apply - Jobs is an independent open-source project. It is not affiliated with, endorsed by or sponsored by LinkedIn or Google; those names belong to their owners. The tool acts through your own accounts and is provided as is, without warranty. You are responsible for following the terms of every website you use it with. Screenshots on this site use made-up example data.</p>
+  </div>
+</footer>
+</body>
+</html>

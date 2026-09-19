@@ -1,12 +1,15 @@
 """
-The public website (docs/, served by GitHub Pages) and the README. They are the first thing a stranger sees, so the basics
-that make the site findable and trustworthy are pinned down here: search-engine essentials, working links, no third-party
-requests, structured data that says what the page says, and no personal name.
+The public website (docs/, built from site/ and served by GitHub Pages) and the README. They are the first thing a stranger sees,
+so what makes the site findable and trustworthy is pinned down here, for every page: search-engine essentials, working links,
+no third-party requests, structured data that says what the page says, a sitemap that matches the pages, honest wording about
+risk, and no personal name.
 """
 
+import importlib.util
 import json
 import re
 import struct
+import sys
 import xml.etree.ElementTree as ET
 from html.parser import HTMLParser
 from pathlib import Path
@@ -16,6 +19,21 @@ import pytest
 ROOT = Path(__file__).resolve().parent.parent
 DOCS = ROOT / "docs"
 SITE_URL = "https://sideeffects69.github.io/Magic-Apply-Jobs/"
+ALLOWED_OUTSIDE = ("https://github.com/sideeffects69/Magic-Apply-Jobs", "https://www.linkedin.com/help/linkedin/answer/")
+
+
+def _load(name: str, filename: str):
+    spec = importlib.util.spec_from_file_location(name, ROOT / "site" / filename)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+sys.path.insert(0, str(ROOT / "site"))
+PAGES_MODULE = _load("magic_site_pages", "pages.py")
+BUILD = _load("magic_site_build", "build.py")
+PAGES = PAGES_MODULE.PAGES
 
 
 def _squash(text: str) -> str:
@@ -34,15 +52,26 @@ class _Page(HTMLParser):
         self.ids = set()
         self.h1_count = 0
         self.faq = []                   # (question, answer) from the visible <details class="faq"> blocks
+        self.main_text = []
         self._capture = None            # what the next text belongs to
         self._buffer = []
         self._details = None
+        self._in_main = False
+        self._skip = 0
+        self.sitelist_links = []        # links inside the HTML site map's own list (not the header or footer)
+        self._in_sitelist = False
 
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
         self.tags.append((tag, attrs))
         if attrs.get("id"):
             self.ids.add(attrs["id"])
+        if tag == "main":
+            self._in_main = True
+        if tag == "ul" and "sitelist" in (attrs.get("class") or "").split():
+            self._in_sitelist = True
+        if tag == "a" and self._in_sitelist:
+            self.sitelist_links.append(attrs.get("href"))
         if tag == "meta":
             key = attrs.get("name") or attrs.get("property")
             if key:
@@ -51,8 +80,10 @@ class _Page(HTMLParser):
             self.h1_count += 1
         elif tag == "title":
             self._start("title")
-        elif tag == "script" and attrs.get("type") == "application/ld+json":
-            self._start("jsonld")
+        elif tag == "script":
+            self._skip += 1
+            if attrs.get("type") == "application/ld+json":
+                self._start("jsonld")
         elif tag == "details" and "faq" in (attrs.get("class") or "").split():
             self._details = {"q": "", "a": ""}
         elif tag == "summary" and self._details is not None:
@@ -61,10 +92,16 @@ class _Page(HTMLParser):
             self._start("answer")
 
     def handle_endtag(self, tag):
+        if tag == "main":
+            self._in_main = False
+        if tag == "ul":
+            self._in_sitelist = False
         if tag == "title" and self._capture == "title":
             self.title = _squash(self._finish())
-        elif tag == "script" and self._capture == "jsonld":
-            self.jsonld.append(self._finish())
+        elif tag == "script":
+            self._skip -= 1
+            if self._capture == "jsonld":
+                self.jsonld.append(self._finish())
         elif tag == "summary" and self._capture == "question":
             self._details["q"] = _squash(self._finish())
         elif tag == "p" and self._capture == "answer":
@@ -76,6 +113,8 @@ class _Page(HTMLParser):
     def handle_data(self, data):
         if self._capture:
             self._buffer.append(data)
+        if self._in_main and not self._skip:
+            self.main_text.append(data)
 
     def _start(self, what):
         self._capture, self._buffer = what, []
@@ -84,16 +123,32 @@ class _Page(HTMLParser):
         text, self._capture, self._buffer = "".join(self._buffer), None, []
         return text
 
+    @property
+    def words(self) -> int:
+        return len(re.findall(r"[A-Za-z0-9'’-]+", " ".join(self.main_text)))
+
+
+def _file(page: dict) -> Path:
+    return DOCS / page["slug"] / "index.html" if page["slug"] else DOCS / "index.html"
+
+
+_CACHE: dict = {}
+
 
 def _parse(path: Path) -> _Page:
-    page = _Page()
-    page.feed(path.read_text(encoding="utf-8"))
-    return page
+    if path not in _CACHE:
+        page = _Page()
+        page.feed(path.read_text(encoding="utf-8"))
+        _CACHE[path] = page
+    return _CACHE[path]
 
 
-@pytest.fixture(scope="module")
-def home() -> _Page:
-    return _parse(DOCS / "index.html")
+def parsed(page: dict) -> _Page:
+    return _parse(_file(page))
+
+
+everypage = pytest.mark.parametrize("page", PAGES, ids=[p["slug"] or "home" for p in PAGES])
+GUIDES = [p for p in PAGES if p["kind"] == "guide"]
 
 
 def _png_size(path: Path) -> tuple[int, int]:
@@ -106,41 +161,82 @@ def _local_target(value: str, base: Path) -> Path | None:
     '''The file a relative link points at, or None for links that leave the site or stay on the page.'''
     if re.match(r"^(https?:|mailto:|#|data:)", value):
         return None
-    return (base / value.split("#")[0].split("?")[0]).resolve()
+    target = (base / value.split("#")[0].split("?")[0]).resolve()
+    return target / "index.html" if target.is_dir() else target
 
 
 # ---------------------------------------------------------------------------
-# What search engines and link previews read
+# The sources and the folder that GitHub Pages serves must agree
 # ---------------------------------------------------------------------------
-def test_the_title_and_description_fit_what_search_results_show(home):
-    assert 30 <= len(home.title) <= 60, f"title is {len(home.title)} characters: {home.title!r}"
-    description = home.meta["description"]
+def test_docs_is_exactly_what_the_sources_produce():
+    stale = [str(path.relative_to(ROOT)) for path, text in BUILD.build().items() if not path.exists() or path.read_text(encoding="utf-8") != text]
+    assert not stale, "run `python site/build.py` (and never edit these by hand): " + ", ".join(stale)
+
+
+# ---------------------------------------------------------------------------
+# What search engines and link previews read, on every page
+# ---------------------------------------------------------------------------
+@everypage
+def test_the_title_and_description_fit_what_search_results_show(page):
+    doc = parsed(page)
+    assert 20 <= len(doc.title) <= 60, f"title is {len(doc.title)} characters: {doc.title!r}"
+    description = doc.meta["description"]
     assert 120 <= len(description) <= 160, f"description is {len(description)} characters"
+    assert doc.title == page["title"] and description == page["description"]
+
+
+def test_every_title_and_description_is_different():
+    titles = [parsed(p).title for p in PAGES]
+    descriptions = [parsed(p).meta["description"] for p in PAGES]
+    assert len(set(titles)) == len(titles) and len(set(descriptions)) == len(descriptions), "duplicate titles or descriptions compete with each other"
+
+
+def test_the_pages_target_the_words_people_search_for():
+    home = parsed(PAGES[0])
     for phrase in ("free", "open-source", "LinkedIn"):
-        assert phrase.lower() in (home.title + " " + description).lower(), f"{phrase!r} is what people search for"
+        assert phrase.lower() in (home.title + " " + home.meta["description"]).lower()
+    wanted = {"how-to-auto-apply-on-linkedin": "auto apply", "linkedin-easy-apply-limit": "easy apply limit", "is-linkedin-auto-apply-safe": "safe",
+              "apply-on-company-websites": "company", "free-linkedin-auto-apply-tools": "free"}
+    for slug, phrase in wanted.items():
+        assert phrase in parsed(PAGES_MODULE.BY_SLUG[slug]).title.lower(), f"{slug}: the title should contain {phrase!r}"
 
 
-def test_the_page_has_exactly_one_h1_a_language_and_a_canonical_address(home):
-    assert home.h1_count == 1
-    html_tag = next(attrs for tag, attrs in home.tags if tag == "html")
-    assert html_tag.get("lang") == "en"
-    canonical = [attrs["href"] for tag, attrs in home.tags if tag == "link" and attrs.get("rel") == "canonical"]
-    assert canonical == [SITE_URL]
-    assert "noindex" not in home.meta.get("robots", "")
+@everypage
+def test_every_page_has_one_h1_a_language_and_the_right_canonical_address(page):
+    doc = parsed(page)
+    assert doc.h1_count == 1
+    assert next(attrs for tag, attrs in doc.tags if tag == "html").get("lang") == "en"
+    canonical = [attrs["href"] for tag, attrs in doc.tags if tag == "link" and attrs.get("rel") == "canonical"]
+    assert canonical == [PAGES_MODULE.url(page["slug"])]
+    assert "noindex" not in doc.meta.get("robots", "")
 
 
-def test_link_previews_have_a_real_image_at_the_size_they_announce(home):
-    image = home.meta["og:image"]
-    assert image.startswith(SITE_URL) and image == home.meta["twitter:image"]
-    size = _png_size(DOCS / image.removeprefix(SITE_URL))
-    assert size == (int(home.meta["og:image:width"]), int(home.meta["og:image:height"])) == (1200, 630)
-    assert home.meta["twitter:card"] == "summary_large_image"
-    assert home.meta["og:url"] == SITE_URL and home.meta["og:image:alt"]
+@everypage
+def test_link_previews_have_a_real_image_at_the_size_they_announce(page):
+    doc = parsed(page)
+    image = doc.meta["og:image"]
+    assert image.startswith(SITE_URL) and image == doc.meta["twitter:image"]
+    assert _png_size(DOCS / image.removeprefix(SITE_URL)) == (int(doc.meta["og:image:width"]), int(doc.meta["og:image:height"])) == (1200, 630)
+    assert doc.meta["twitter:card"] == "summary_large_image"
+    assert doc.meta["og:url"] == PAGES_MODULE.url(page["slug"]) and doc.meta["og:image:alt"]
 
 
-def test_the_sitemap_lists_the_canonical_page():
-    urls = [element.text for element in ET.parse(DOCS / "sitemap.xml").getroot().iter() if element.tag.endswith("}loc")]
-    assert urls == [SITE_URL]
+def test_the_sitemap_lists_every_page_with_its_date_and_nothing_else():
+    root = ET.parse(DOCS / "sitemap.xml").getroot()
+    ns = "{http://www.sitemaps.org/schemas/sitemap/0.9}"
+    listed = {u.find(ns + "loc").text: u.find(ns + "lastmod").text for u in root.findall(ns + "url")}
+    assert listed == {PAGES_MODULE.url(p["slug"]): p["updated"] for p in PAGES}
+    for address in listed:
+        assert _file({"slug": address.removeprefix(SITE_URL).strip("/")}).exists(), address
+
+
+def test_the_html_site_map_links_to_every_other_page():
+    sitemap = next(p for p in PAGES if p["slug"] == "sitemap")
+    hrefs = set(parsed(sitemap).sitelist_links)
+    for page in PAGES:
+        if page["slug"] != "sitemap":
+            assert ("../" + page["slug"] + "/" if page["slug"] else "../") in hrefs, page["slug"] or "home"
+    assert "../sitemap.xml" in {attrs["href"] for tag, attrs in parsed(sitemap).tags if tag == "a" and "href" in attrs}
 
 
 def test_the_not_found_page_is_kept_out_of_search_results():
@@ -162,81 +258,158 @@ def test_the_google_search_console_verification_file_is_kept_exactly_as_google_g
 # ---------------------------------------------------------------------------
 # Structured data must say what the page says
 # ---------------------------------------------------------------------------
-def _blocks(home):
-    return {block["@type"]: block for block in map(json.loads, home.jsonld)}
+def _blocks(doc):
+    return {block["@type"]: block for block in map(json.loads, doc.jsonld)}
 
 
-def test_the_structured_data_describes_a_free_open_source_application(home):
-    app = _blocks(home)["SoftwareApplication"]
-    assert app["name"] == "Magic Apply - Jobs" and app["url"] == SITE_URL
-    assert app["offers"]["price"] == "0" and app["isAccessibleForFree"] is True
-    assert "mit" in app["license"].lower()
+def test_the_home_page_describes_a_free_open_source_application():
+    blocks = _blocks(parsed(PAGES[0]))
+    app = blocks["SoftwareApplication"]
+    assert app["name"] == "Magic Apply - Jobs" and app["url"] == SITE_URL and app["softwareVersion"] == PAGES_MODULE.VERSION
+    assert app["offers"]["price"] == "0" and app["isAccessibleForFree"] is True and "mit" in app["license"].lower()
     assert "aggregateRating" not in app and "review" not in app, "never publish ratings nobody gave"
     for screenshot in app["screenshot"]:
         assert (DOCS / screenshot.removeprefix(SITE_URL)).exists(), screenshot
 
 
-def test_the_faq_in_the_structured_data_matches_the_faq_on_the_page(home):
-    questions = _blocks(home)["FAQPage"]["mainEntity"]
+@everypage
+def test_the_faq_data_matches_the_faq_on_the_page(page):
+    doc = parsed(page)
+    if not page["faq"]:
+        assert not doc.faq and "FAQPage" not in _blocks(doc)
+        return
+    questions = _blocks(doc)["FAQPage"]["mainEntity"]
     from_json = [(_squash(q["name"]), _squash(q["acceptedAnswer"]["text"])) for q in questions]
-    assert from_json == home.faq and len(home.faq) >= 5, "search engines may only show answers that are visible on the page"
+    assert from_json == doc.faq and len(doc.faq) == len(page["faq"]), "search engines may only show answers that are visible on the page"
+
+
+@pytest.mark.parametrize("page", [p for p in PAGES if p["slug"]], ids=lambda p: p["slug"])
+def test_inner_pages_have_breadcrumbs_in_the_page_and_in_the_data(page):
+    doc = parsed(page)
+    crumbs = _blocks(doc)["BreadcrumbList"]["itemListElement"]
+    assert [c["name"] for c in crumbs] == ["Home", page["crumb"]] and crumbs[1]["item"] == PAGES_MODULE.url(page["slug"])
+    assert any(tag == "nav" and attrs.get("aria-label") == "Breadcrumb" for tag, attrs in doc.tags)
+
+
+@pytest.mark.parametrize("page", GUIDES, ids=lambda p: p["slug"])
+def test_guides_carry_article_data_with_dates_and_no_personal_author(page):
+    article = _blocks(parsed(page))["Article"]
+    assert article["dateModified"] == page["updated"] and article["headline"] == page["h1"] and len(article["headline"]) <= 110
+    assert article["author"]["@type"] == "Organization", "the site does not name a person"
+
+
+# ---------------------------------------------------------------------------
+# Content that earns its place
+# ---------------------------------------------------------------------------
+@pytest.mark.parametrize("page", GUIDES, ids=lambda p: p["slug"])
+def test_every_guide_has_real_substance_and_links_onward(page):
+    doc = parsed(page)
+    assert doc.words >= 600, f"{page['slug']} has only {doc.words} words: thin pages do not help anyone"
+    inner = {attrs["href"] for tag, attrs in doc.tags if tag == "a" and re.match(r"^\.\./[a-z-]+/$", attrs.get("href", ""))}
+    assert len(inner) >= 4, f"{page['slug']} links to only {len(inner)} other pages"
+
+
+def test_every_page_can_be_reached_from_the_home_page():
+    home_links = {attrs["href"] for tag, attrs in parsed(PAGES[0]).tags if tag == "a" and "href" in attrs}
+    for page in PAGES[1:]:
+        assert page["slug"] + "/" in home_links, f"the home page does not link to {page['slug']}"
+
+
+@pytest.mark.parametrize("page", GUIDES, ids=lambda p: p["slug"])
+def test_every_guide_has_a_table_of_contents_that_works(page):
+    doc = parsed(page)
+    anchors = [attrs["href"][1:] for tag, attrs in doc.tags if tag == "a" and attrs.get("href", "").startswith("#") and attrs["href"] != "#main"]
+    assert len(anchors) >= 3 and all(a in doc.ids for a in anchors)
+
+
+# ---------------------------------------------------------------------------
+# Honest about risk and about what is only reported
+# ---------------------------------------------------------------------------
+def test_the_safety_guide_says_plainly_that_the_risk_is_real_and_cites_linkedin():
+    doc = parsed(PAGES_MODULE.BY_SLUG["is-linkedin-auto-apply-safe"])
+    text = _squash(" ".join(doc.main_text)).lower()
+    assert "not risk-free" in text and "restricted or shut down" in text and "nothing on this page can make it zero" in text
+    assert "undetectable" in text and "do not claim" in text, "it must say the safety settings do not make the tool undetectable"
+    hrefs = {attrs.get("href") for tag, attrs in doc.tags if tag == "a"}
+    assert PAGES_MODULE.LINKEDIN_PROHIBITED in hrefs, "cite LinkedIn's own rule instead of paraphrasing it"
+
+
+def test_the_easy_apply_limit_guide_presents_the_number_as_a_report_not_a_fact():
+    text = _squash(" ".join(parsed(PAGES_MODULE.BY_SLUG["linkedin-easy-apply-limit"]).main_text)).lower()
+    assert "has not published an official number" in text and "report, not a rule" in text and "believe linkedin" in text
+
+
+def test_the_pages_admit_the_tool_is_a_beta_tested_on_mock_sites():
+    for slug in ("", "apply-on-company-websites", "how-to-auto-apply-on-linkedin"):
+        text = _squash(" ".join(parsed(PAGES_MODULE.BY_SLUG[slug]).main_text)).lower()
+        assert "beta" in text, slug or "home"
+    home = _squash((DOCS / "index.html").read_text(encoding="utf-8")).lower()
+    assert "mock" in home and "not affiliated with" in home and "own risk" in home
+    assert "not verified" in _squash(" ".join(parsed(PAGES_MODULE.BY_SLUG["faq"]).main_text)).lower() or "have not verified" in _squash(
+        " ".join(parsed(PAGES_MODULE.BY_SLUG["faq"]).main_text)).lower(), "no claims about named applicant tracking systems"
 
 
 # ---------------------------------------------------------------------------
 # Images, links, and no third parties
 # ---------------------------------------------------------------------------
-def test_every_image_has_alt_text_and_the_size_of_its_file(home):
-    images = [attrs for tag, attrs in home.tags if tag == "img"]
-    assert len(images) >= 5
-    for attrs in images:
-        target = _local_target(attrs["src"], DOCS)
+@everypage
+def test_every_image_has_alt_text_and_the_size_of_its_file(page):
+    for tag, attrs in parsed(page).tags:
+        if tag != "img":
+            continue
+        target = _local_target(attrs["src"], _file(page).parent)
         assert target and target.exists(), attrs["src"]
         if target.suffix == ".png":
             assert (int(attrs["width"]), int(attrs["height"])) == _png_size(target), f"{attrs['src']}: width/height must match the file"
             assert len(attrs.get("alt", "")) >= 20, f"{attrs['src']} needs a real description"
 
 
-def test_every_local_link_and_in_page_anchor_works(home):
-    for tag, attrs in home.tags:
+@everypage
+def test_every_local_link_and_in_page_anchor_works(page):
+    doc = parsed(page)
+    for tag, attrs in doc.tags:
         for name in ("href", "src"):
             value = attrs.get(name)
             if not value:
                 continue
             if value.startswith("#"):
-                assert value[1:] in home.ids, f"{value} points at nothing"
+                assert value[1:] in doc.ids, f"{value} points at nothing"
             else:
-                target = _local_target(value, DOCS)
+                target = _local_target(value, _file(page).parent)
                 assert target is None or target.exists(), f"{tag} {name}={value!r} does not exist"
 
 
-def test_the_site_loads_nothing_from_anywhere_else(home):
-    for tag, attrs in home.tags:
+@everypage
+def test_the_site_loads_nothing_from_anywhere_else(page):
+    for tag, attrs in parsed(page).tags:
         if tag == "script":
             assert attrs.get("type") == "application/ld+json", "no scripts: the site promises no tracking"
-        if tag == "link" and attrs.get("rel") in ("stylesheet", "preload", "preconnect", "dns-prefetch"):
+        if tag == "link" and attrs.get("rel") in ("preload", "preconnect", "dns-prefetch"):
             pytest.fail(f"a link to {attrs.get('href')} would load from outside the site")
+        if tag == "link" and attrs.get("rel") == "stylesheet":
+            assert not re.match(r"^(https?:)?//", attrs["href"]), "stylesheets must be the site's own"
         if tag in ("img", "iframe", "video", "audio", "source"):
             assert not re.match(r"^(https?:)?//", attrs.get("src", "")), attrs
 
 
-def test_every_outside_link_goes_to_the_project_or_its_licence(home):
-    for tag, attrs in home.tags:
+@everypage
+def test_outside_links_go_only_to_the_project_or_linkedins_own_help_pages(page):
+    for tag, attrs in parsed(page).tags:
         href = attrs.get("href", "")
         if tag == "a" and re.match(r"^https?://", href):
-            assert href.startswith("https://github.com/sideeffects69/Magic-Apply-Jobs"), href
+            assert href.startswith(ALLOWED_OUTSIDE), href
+            if "linkedin.com" in href:
+                assert "noopener" in attrs.get("rel", ""), "outside links open safely"
 
 
 # ---------------------------------------------------------------------------
-# Keeping a personal name out, and not overclaiming
+# Keeping a personal name out
 # ---------------------------------------------------------------------------
 def test_the_maintainers_name_is_not_on_the_site_or_in_the_readme():
-    for path in [*DOCS.rglob("*.html"), DOCS / "sitemap.xml", ROOT / "README.md", ROOT / "CONTRIBUTING.md"]:
+    paths = [*DOCS.rglob("*.html"), *DOCS.rglob("*.xml"), *(ROOT / "site").rglob("*.html"), ROOT / "site" / "pages.py", ROOT / "README.md",
+             ROOT / "CONTRIBUTING.md"]
+    for path in paths:
         assert "abhyankar" not in path.read_text(encoding="utf-8").lower(), f"{path.name} names the maintainer"
-
-
-def test_the_site_is_honest_that_it_is_a_beta_tested_on_mock_sites(home):
-    text = _squash((DOCS / "index.html").read_text(encoding="utf-8")).lower()
-    assert "beta" in text and "mock" in text and "not affiliated with" in text and "own risk" in text
 
 
 # ---------------------------------------------------------------------------

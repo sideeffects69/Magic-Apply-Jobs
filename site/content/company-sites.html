@@ -1,0 +1,52 @@
+<h2 id="what-happens">What happens on a company&rsquo;s site</h2>
+<p>In the <strong>Search</strong> tab, <strong>Easy Apply only</strong> is off by default, so the tool also handles jobs that send you off LinkedIn. For each one it:</p>
+<ol>
+  <li><strong>Opens the company&rsquo;s application page</strong> from the LinkedIn job.</li>
+  <li><strong>Signs in with Google if the site asks.</strong> It looks for a &ldquo;Sign in&rdquo;, &ldquo;Sign up&rdquo; or &ldquo;Continue with Google&rdquo; button on the page, in a pop-up or inside Google&rsquo;s own frame, clicks it, and picks the account you set under <em>Account &rarr; Google account for company sites</em>.</li>
+  <li><strong>Uploads your resume first</strong>, so the site&rsquo;s own resume autofill runs before anything is typed.</li>
+  <li><strong>Fills only what is still empty.</strong> A field the site already filled, or that you typed, is never replaced.</li>
+  <li><strong>Clicks Next, Continue and Submit</strong> page after page, and stops when the site confirms the application.</li>
+</ol>
+<figure>
+  <div class="frame"><img src="{{base}}assets/screenshot-run.png" width="1264" height="999" loading="lazy" alt="The activity log of a run: it opens a company application, clicks Continue with Google, uploads the resume, fills fields and clicks Submit application."></div>
+  <figcaption>The activity log of a company-site application, using the tool&rsquo;s real messages. The company and person shown are made up.</figcaption>
+</figure>
+
+<h2 id="kinds-of-sites">Three kinds of application page</h2>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>What the site is like</th><th>What the tool does</th></tr></thead>
+  <tbody>
+    <tr><td><strong>A single public form.</strong> No account needed.</td><td>Uploads your resume, fills the empty fields and submits, after your review if <em>Pause before submitting</em> is on.</td></tr>
+    <tr><td><strong>Offers &ldquo;Continue with Google&rdquo;.</strong></td><td>Clicks the Google button and picks your account. If Google asks for a password, 2-step verification or more than a sign-in, it waits for you.</td></tr>
+    <tr><td><strong>Forces an email-and-password account, with no Google option.</strong></td><td>Does not create accounts. It saves the job, with the company&rsquo;s link and the reason, to the Failed jobs list so you can finish it by hand.</td></tr>
+  </tbody>
+</table>
+</div>
+<p>Some applicant tracking systems commonly ask you to create an account for each employer, and those fall into the third row. We have not verified the tool against specific systems by name, so we do not claim support for any of them. See <a href="{{link:faq}}">the FAQ</a>.</p>
+
+<h2 id="guardrails">The rules it follows</h2>
+<ul>
+  <li><strong>It never submits with a required question empty</strong>, and it <strong>never invents an answer</strong>. A question it cannot answer from your profile goes to the AI if you turned that on. Otherwise it waits for you in the browser window (<em>Wait for me on hard steps</em>). If you do not answer in time, the job goes to the Failed jobs list, never submitted half empty.</li>
+  <li><strong>It never types a Google password and never gets past a CAPTCHA or 2-step verification.</strong> It waits while you finish that screen, then carries on. If Google asks for more than a sign-in, such as access to Drive or Gmail, it stops and lets you decide, and it never picks a Google account by guessing.</li>
+  <li><strong>It never sends template placeholders.</strong> Your name, email and phone must be set first, and values such as &ldquo;First&rdquo; or &ldquo;123 Main Street&rdquo; are never sent to an employer.</li>
+  <li><strong>It only says you are authorised to work in your own country.</strong> A question about another country is left for you, and it does not assume you will relocate.</li>
+  <li><strong>Marketing opt-ins stay unticked.</strong> Privacy and terms consent boxes are ticked.</li>
+  <li><strong>Number questions are answered by range.</strong> Three years goes in &ldquo;3-5 years&rdquo;, never in &ldquo;10-13 years&rdquo;.</li>
+</ul>
+
+<h2 id="hands-over">When it hands over to you</h2>
+<p>Career sites are all different. Expect to be needed for CAPTCHAs, sites that force an email-and-password account, heavily custom dropdowns and file-upload-only steps. When the tool cannot finish, the job goes to the <strong>Failed jobs</strong> list with a plain reason, a link to the company&rsquo;s page and a screenshot.</p>
+<figure>
+  <div class="frame"><img src="{{base}}assets/screenshot-failed-jobs.png" width="1264" height="319" loading="lazy" alt="The Failed Applications page listing jobs the tool could not finish, each with a plain-language reason and a link to the company's application."></div>
+  <figcaption>Failed jobs come with a reason and a link, so you can finish them yourself.</figcaption>
+</figure>
+
+<h2 id="honest-limits">Honest limits</h2>
+<p>The tool works on ordinary forms, including forms inside iframes, styled radio buttons and multi-page flows. It has been tested against realistic local mock sites, not against every employer on the internet, so treat it as a beta, keep <em>Pause before submitting</em> on, and watch your first runs. If something goes wrong, <strong>Download report</strong> before you close the tool and attach it to an <a href="{{REPO}}/issues">issue</a>: it shows your recent log and why jobs failed, with your personal details masked.</p>
+<p>Using any tool on LinkedIn also carries account risk. Read <a href="{{link:is-linkedin-auto-apply-safe}}">Is LinkedIn auto apply safe?</a>, and see <a href="{{link:linkedin-easy-apply-limit}}">the Easy Apply limit guide</a> for why company sites matter when Easy Apply runs out.</p>
+
+<div class="cta-band">
+  <p><strong>See it for yourself.</strong> Free, open source, and it keeps no data after you close it.</p>
+  <a class="btn btn-primary" href="{{RELEASES}}">Download the tool</a>
+</div>
