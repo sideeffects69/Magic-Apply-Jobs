@@ -4,6 +4,8 @@ A free, open-source tool that automates job applications. It runs entirely on yo
 
 Maintained by **Om Abhyankar** · https://github.com/sideeffects69 · Source: https://github.com/sideeffects69/Magic-Apply-Jobs
 
+**Free and open source under the [MIT License](LICENSE) - and it will stay that way.**
+
 ## ✨ Content
 - [Easy start (recommended)](#-easy-start-recommended)
 - [Portable exe (no install)](#-portable-exe-no-install)
@@ -42,7 +44,7 @@ The control panel is reachable only from your own computer, and it refuses reque
 
 ## 📦 Portable exe (no install)
 
-Prefer one file you can copy to any Windows PC? Build it once and share it:
+Prefer one file you can copy to any Windows PC? **Download `MagicApply.exe` from the [latest release](https://github.com/sideeffects69/Magic-Apply-Jobs/releases/latest)** (compare its SHA-256 with the one in the release notes), or build it yourself and share it:
 
 1. On a PC that already ran `start.bat`, double-click **`build_exe.bat`**. It takes a few minutes and produces **`dist\MagicApply.exe`**.
 2. Copy that single file anywhere (a USB stick, another PC) and double-click it. It opens the control panel in your browser - no Python, no installer. It only needs **Google Chrome** on the PC.
