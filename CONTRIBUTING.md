@@ -1,8 +1,13 @@
 # Contributing
 
 Thanks for your interest in improving this project! Bug reports, ideas and pull
-requests are welcome - open an issue or a pull request on
-https://github.com/sideeffects69.
+requests are welcome - open an issue or a pull request at
+https://github.com/sideeffects69/Magic-Apply-Jobs.
+
+Found a bug while using the tool? Click **Download report** in the control panel
+before you close it (everything is erased on exit), read the file, and attach it
+to your issue. Your personal details are masked, but the masking is automatic, so
+check it first.
 
 ## Before you open a pull request
 
