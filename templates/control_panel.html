@@ -287,6 +287,7 @@
                 <button class="btn secondary" id="backupBtn" type="button">Download backup</button>
                 <button class="btn secondary" id="restoreBtn" type="button">Restore from backup</button>
                 <input type="file" id="restoreFile" accept=".json,application/json" style="display:none">
+                <button class="btn secondary" id="reportBtn" type="button" title="Saves a text file with your recent activity log and why jobs failed, with your name, email, phone and passwords masked. Read it before you share it.">Download report</button>
                 <button class="btn danger" id="finishBtn" type="button">Finish &amp; erase</button>
                 <p class="data-msg" id="dataMsg"></p>
             </div>
@@ -296,9 +297,11 @@
     <dialog class="finish" id="finishDialog">
         <h2>Finish and erase your data?</h2>
         <p>This erases everything you entered - settings, resume and history - from this computer and closes the tool. Anything that is not saved in a backup file is gone for good. If a run is in progress it will be stopped.</p>
+        <p>Something went wrong? Download a report first: it keeps your recent log and why jobs failed, with your personal details masked. Read it before you share it.</p>
         <div class="dlg-actions">
             <button class="btn" id="finishBackupBtn" type="button">Download backup, then erase</button>
             <button class="btn danger" id="finishNoBackupBtn" type="button">Erase without a backup</button>
+            <button class="btn secondary" id="finishReportBtn" type="button">Download report</button>
             <button class="btn secondary" id="finishCancelBtn" type="button">Cancel</button>
         </div>
     </dialog>
@@ -1199,6 +1202,25 @@
                 });
         }
 
+        // A masked, plain-text report of what happened, for a bug report (the tool erases its own log when it closes).
+        function downloadReport() {
+            return fetch('/api/report')
+                .then(function (r) {
+                    if (!r.ok) throw new Error('the app answered ' + r.status);
+                    return r.blob();
+                })
+                .then(function (blob) {
+                    var link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = 'MagicApply-report-' + new Date().toISOString().slice(0, 10) + '.txt';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    setTimeout(function () { URL.revokeObjectURL(link.href); }, 10000);
+                    setDataMsg('Report downloaded. Your personal details are masked, but the masking is automatic - read the file before you share it.', 'ok');
+                });
+        }
+
         function restoreFromFile(file) {
             if (!file) return;
             var reader = new FileReader();
@@ -1234,6 +1256,18 @@
 
         document.getElementById('backupBtn').addEventListener('click', function () {
             downloadBackup().catch(function (err) { setDataMsg('Could not create the backup: ' + err, 'err'); });
+        });
+        document.getElementById('reportBtn').addEventListener('click', function () {
+            downloadReport().catch(function (err) { setDataMsg('Could not create the report: ' + err, 'err'); });
+        });
+        document.getElementById('finishReportBtn').addEventListener('click', function () {
+            var button = this;
+            downloadReport().then(function () {
+                button.textContent = 'Report downloaded';
+            }).catch(function (err) {
+                button.textContent = 'Report failed';
+                setDataMsg('Could not create the report: ' + err, 'err');
+            });
         });
         document.getElementById('restoreBtn').addEventListener('click', function () {
             document.getElementById('restoreFile').click();

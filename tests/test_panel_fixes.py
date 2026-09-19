@@ -7,6 +7,7 @@ import csv
 import io
 import os
 import queue
+import re
 import socket
 import subprocess
 import sys
@@ -153,8 +154,12 @@ def test_when_the_port_is_taken_by_another_program_the_panel_uses_the_next_one(t
                     break
         text = "".join(output)
         assert "already running" not in text, "it must not claim the other program is the control panel:\n" + text
-        assert f"http://127.0.0.1:{busy_port + 1}" in text, text
-        assert f"Port {busy_port} is used by another program" in text, text
+        # Normally the very next port, but another program may hold that one too - any free port above it is right.
+        match = re.search(r"Control panel ready at:\s+http://127\.0\.0\.1:(\d+)", text)
+        assert match, text
+        chosen = int(match.group(1))
+        assert chosen > busy_port, text
+        assert f"Port {busy_port} is used by another program - using port {chosen} instead" in text, text
     finally:
         process.kill()
         process.wait(timeout=10)

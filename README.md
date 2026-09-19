@@ -97,6 +97,8 @@ To keep your details, use the bar at the top of the control panel:
 
 What a backup contains: settings, resume text, uploaded/generated resume files, applied-jobs history. It does not contain the failed-jobs list, logs, screenshots or the browser profile.
 
+**Something went wrong? Send a report.** Because the log and the failed-jobs list are erased with everything else, click **Download report** *before* you close the tool (the Finish & erase window offers it too). It saves a plain-text file (`MagicApply-report-<date>.txt`) with the last part of the activity log, why jobs failed, and which settings were on. Your name, email, phone, address, passwords, API keys, links to you and folder names are masked, and it leaves out your applied-jobs list and screenshots. The masking is automatic and can miss things, so **read the file before you share it** - then attach it to an [issue](https://github.com/sideeffects69/Magic-Apply-Jobs/issues).
+
 **Where it lives while the tool is open:** in a private per-user folder, never inside the project folder, so you can zip, copy or share the project without any of your data going along:
 
 | System | Folder |

@@ -218,3 +218,25 @@ def test_start_with_everything_saved_just_confirms_and_shows_what_will_run(drive
     assert "Searching for: Software Engineer" in alert.text and "company websites" in alert.text
     alert.dismiss()
     assert panel["bot_starts"] == []
+
+
+# ---------------------------------------------------------------------------
+# Download report (the tool erases its own log when it closes - this is how evidence of a bad run survives)
+# ---------------------------------------------------------------------------
+def test_the_report_button_saves_a_report_and_says_to_read_it_before_sharing(driver, panel):
+    driver.get(panel["url"])
+    _wait_for(driver, "return !!document.getElementById('reportBtn')")
+    driver.execute_script("document.getElementById('reportBtn').click();")
+    message = _wait_for(driver, "return document.getElementById('dataMsg').innerText")
+    assert "Report downloaded" in message and "read the file" in message
+
+
+def test_finish_and_erase_offers_a_report_first(driver, panel):
+    driver.get(panel["url"])
+    _wait_for(driver, "return !!document.getElementById('finishBtn')")
+    driver.execute_script("document.getElementById('finishBtn').click();")
+    assert _wait_for(driver, "return document.getElementById('finishDialog').open")
+    assert "Something went wrong? Download a report first" in driver.find_element("id", "finishDialog").text
+    driver.execute_script("document.getElementById('finishReportBtn').click();")
+    assert _wait_for(driver, "return document.getElementById('finishReportBtn').textContent === 'Report downloaded'")
+    driver.execute_script("document.getElementById('finishCancelBtn').click();")        # never actually erase anything here

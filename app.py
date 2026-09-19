@@ -36,7 +36,7 @@ from urllib.parse import urlparse
 import config_schema
 from config import _overrides
 from config._overrides import DATA_DIR
-from modules import session_data
+from modules import session_data, diagnostic_report
 
 app = Flask(__name__)
 # A backup file carries a whole profile (resume files, history, optionally passwords).
@@ -766,6 +766,25 @@ def api_backup():
         mimetype="application/json",
         headers={"Content-Disposition": 'attachment; filename="{}"'.format(filename), "Cache-Control": "no-store"},
     )
+
+
+@app.route('/api/report', methods=['GET'])
+def api_report():
+    '''
+    Downloads a plain-text report for a bug report: recent activity log, why jobs failed and which settings
+    were on, with the person's details masked. The tool erases everything when it closes, so this is the way
+    to keep evidence of a run that went wrong.
+    '''
+    report = diagnostic_report.build_report(
+        config=_effective_config(),
+        history_csv=os.path.join(PATH, _HISTORY_CSV),
+        failed_csv=os.path.join(PATH, _FAILED_CSV),
+        log_paths=[LOG_PATH, os.path.join(DATA_DIR, "logs", "log.txt")],
+        known_paths=[("data folder", DATA_DIR), ("tool folder", ROOT), ("home folder", os.path.expanduser("~"))],
+        bot_running=_is_running(), frozen=FROZEN)
+    return app.response_class(
+        report, mimetype="text/plain",
+        headers={"Content-Disposition": 'attachment; filename="{}"'.format(diagnostic_report.report_filename()), "Cache-Control": "no-store"})
 
 
 @app.route('/api/restore', methods=['POST'])
