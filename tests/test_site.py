@@ -151,6 +151,14 @@ def test_github_pages_serves_the_folder_as_is():
     assert (DOCS / ".nojekyll").exists()
 
 
+def test_the_google_search_console_verification_file_is_kept_exactly_as_google_gave_it():
+    # Search Console re-checks this file now and then. Deleting it, or changing a single character, un-verifies the site.
+    files = sorted(DOCS.glob("google*.html"))
+    assert files, "docs/google<code>.html is what proves to Google that the site is yours - do not delete it"
+    for path in files:
+        assert path.read_text(encoding="utf-8").strip() == f"google-site-verification: {path.name}", path.name
+
+
 # ---------------------------------------------------------------------------
 # Structured data must say what the page says
 # ---------------------------------------------------------------------------
