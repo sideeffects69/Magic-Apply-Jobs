@@ -11,6 +11,19 @@ overall verdict line.
 import pytest
 
 
+@pytest.fixture(autouse=True)
+def _keep_the_bots_log_out_of_the_real_data_folder(tmp_path_factory, monkeypatch):
+    '''
+    print_lg() appends to <data folder>/logs/log.txt. A test that makes the bot log something must never write into
+    the real data folder (where a person's own settings and log live), so every test logs to a throwaway file.
+    '''
+    try:
+        from modules import helpers
+    except Exception:                       # a pure test on a machine without the bot's dependencies: nothing to redirect
+        return
+    monkeypatch.setattr(helpers, "__logs_file_path", str(tmp_path_factory.getbasetemp() / "test-log" / "log.txt"))
+
+
 @pytest.fixture
 def client():
     '''Flask test client for the local control panel (app.py).'''
