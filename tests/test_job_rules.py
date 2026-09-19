@@ -4,8 +4,9 @@ Rules the bot uses to read and judge a LinkedIn job. Each one guards a bug that 
 
 import pytest
 
-from modules.job_rules import (asks_about_visa, extract_years_required, job_search_url, mentions_masters_degree,
-                               parse_card_subtitle, parse_card_title, requires_security_clearance)
+from modules.job_rules import (amount_texts, asks_about_visa, asks_for_amount_or_notice, extract_years_required,
+                               job_search_url, mentions_masters_degree, notice_texts, parse_card_subtitle,
+                               parse_card_title, requires_security_clearance, unknown_text_answer)
 
 
 @pytest.mark.parametrize("term, expected", [
@@ -85,3 +86,35 @@ def test_visa_questions_are_whole_words(label, expected):
 ])
 def test_required_years_never_crashes_and_ignores_company_age(text, expected):
     assert extract_years_required(text) == expected
+
+
+# ---------------------------------------------------------------------------
+# Salary / notice answers: "not set" must stay blank, never turn into a number
+# ---------------------------------------------------------------------------
+def test_an_unset_salary_and_notice_period_produce_blank_answers():
+    assert amount_texts(0) == ("", "", "")
+    assert notice_texts(-1) == ("", "", "")
+
+
+def test_amounts_that_are_set_convert_as_before():
+    assert amount_texts(1200000) == ("1200000", "12.0", "100000.0")
+    assert notice_texts(66) == ("66", "2", "9")
+
+
+def test_a_notice_period_of_zero_means_immediately_not_unset():
+    assert notice_texts(0) == ("0", "0", "0")
+
+
+@pytest.mark.parametrize("label, expected", [
+    ("What is your expected salary?", True), ("Notice period (in days)", True), ("Current CTC in lakhs", True),
+    ("Expected compensation", True), ("How many years of Python experience do you have?", False),
+    ("Are you comfortable working night shifts?", False),
+])
+def test_salary_and_notice_questions_are_recognised(label, expected):
+    assert asks_for_amount_or_notice(label) is expected
+
+
+def test_an_unknown_text_question_gets_the_years_number_but_never_a_salary_or_notice_question():
+    assert unknown_text_answer("how many years with react?", "3") == "3"
+    assert unknown_text_answer("what is your expected salary?", "3") == ""      # used to type the years into a salary box
+    assert unknown_text_answer("notice period", "3") == ""

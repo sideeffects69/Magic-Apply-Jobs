@@ -22,7 +22,7 @@ version:    26.01.20.5.08
 default_resume_path = "all resumes/default/resume.pdf"      # (In Development)
 
 # What do you want to answer for questions that ask about years of experience you have, this is different from current_experience?
-years_of_experience = "2"          # A number in quotes Eg: "0","1","2","3","4", etc.
+years_of_experience = ""           # A number in quotes Eg: "0","1","2","3","4", etc. Left as "" = not set: the tool won't type a number for you.
 
 # Do you need visa sponsorship now or in future?
 require_visa = "No"               # "Yes" or "No"
@@ -42,7 +42,7 @@ us_citizenship = ""
 ## SOME ANNOYING QUESTIONS BY COMPANIES 🫠 ##
 
 # What to enter in your desired salary question (American and European), What is your expected CTC (South Asian and others)?, only enter in numbers as some companies only allow numbers,
-desired_salary = 1200000          # 80000, 90000, 100000 or 120000 and so on... Do NOT use quotes
+desired_salary = 0                # 80000, 90000, 100000 or 120000 and so on... Do NOT use quotes. 0 = not set: salary questions are left for you (or the AI).
 '''
 Note: If question has the word "lakhs" in it (Example: What is your expected CTC in lakhs), 
 then it will add '.' before last 5 digits and answer. Examples: 
@@ -54,7 +54,7 @@ And if asked in months, then it will divide by 12 and answer. Examples:
 '''
 
 # What is your current CTC? Some companies make it compulsory to be answered in numbers...
-current_ctc = 800000            # 800000, 900000, 1000000 or 1200000 and so on... Do NOT use quotes
+current_ctc = 0                 # 800000, 900000, 1000000 or 1200000 and so on... Do NOT use quotes. 0 = not set.
 '''
 Note: If question has the word "lakhs" in it (Example: What is your current CTC in lakhs), 
 then it will add '.' before last 5 digits and answer. Examples: 
@@ -69,7 +69,7 @@ then it will add '.' before last 5 digits and answer. Examples:
 # currency = "INR"                 # "USD", "INR", "EUR", etc.
 
 # What is your notice period in days?
-notice_period = 30                   # Any number >= 0 without quotes. Eg: 0, 7, 15, 30, 45, etc.
+notice_period = -1                   # Any number >= 0 without quotes. Eg: 0, 7, 15, 30, 45, etc. -1 = not set (0 means "I can start immediately").
 '''
 Note: If question has 'month' or 'week' in it (Example: What is your notice period in months), 
 then it will divide by 30 or 7 and answer respectively. Examples:

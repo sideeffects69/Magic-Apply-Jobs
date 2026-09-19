@@ -40,6 +40,16 @@ def test_blank_values_the_panel_allows_do_not_stop_the_bot_from_starting(tmp_pat
     assert "VALID" in result.stdout, f"{note}: " + result.stdout + result.stderr
 
 
+def test_a_new_user_has_no_made_up_experience_salary_or_notice_period(tmp_path):
+    """
+    Shipping sample numbers (2 years, a salary, a CTC, 30 days) meant anyone who skipped those boxes had them typed
+    into real applications. New users start with 'not set', which the bot and the applier both leave for a person.
+    """
+    result = _run_in_fresh_profile(tmp_path, "from config import questions as q; "
+                                             "print(repr((q.years_of_experience, q.desired_salary, q.current_ctc, q.notice_period)))")
+    assert result.stdout.strip().splitlines()[-1] == "('', 0, 0, -1)", result.stdout + result.stderr
+
+
 def test_every_dropdown_default_is_one_of_its_options(tmp_path):
     """
     A dropdown whose default isn't in its list shows the FIRST option in the browser while the real value is

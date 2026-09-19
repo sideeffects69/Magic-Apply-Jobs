@@ -37,17 +37,20 @@ _TEMPLATE_PLACEHOLDERS = {
 _NUMBER_FIELDS = ("desired_salary", "current_ctc", "notice_period")
 
 
-def _to_int(value) -> int:
-    '''The bot's config turns these into text ("1200000") before we see them; accept either, never raise.'''
+def _to_int(value, unset: int = 0) -> int:
+    '''The bot's config turns these into text ("1200000") before we see them; accept either, never raise.
+    Blank or unreadable gives `unset`.'''
     if isinstance(value, bool):
-        return 0
+        return unset
     if isinstance(value, (int, float)):
         return int(value)
-    digits = re.sub(r"[^\d.]", "", str(value or ""))
+    text = str(value or "")
+    digits = re.sub(r"[^\d.]", "", text)
     try:
-        return int(float(digits)) if digits else 0
+        number = int(float(digits)) if digits else unset
     except ValueError:
-        return 0
+        return unset
+    return -number if digits and number and text.lstrip().startswith("-") else number
 
 
 @dataclass
@@ -71,7 +74,7 @@ class Profile:
     years_of_experience: str = ""
     desired_salary: int = 0
     current_ctc: int = 0
-    notice_period: int = 0
+    notice_period: int = -1               # -1 = not set (0 means "can start immediately")
     require_visa: str = "No"
     us_citizenship: str = ""
     gender: str = ""
@@ -92,7 +95,7 @@ class Profile:
             if name not in known:
                 continue
             if name in _NUMBER_FIELDS:
-                value = _to_int(value)
+                value = _to_int(value, unset=-1 if name == "notice_period" else 0)
             elif isinstance(value, (int, float)) and not isinstance(value, bool):
                 value = str(value)
             if isinstance(value, str):
@@ -390,7 +393,7 @@ def decide(field_info: FieldInfo, profile: Profile, today: str = "") -> Decision
         text_values["desired_salary"] = format_salary(profile.desired_salary, label)
     if key == "current_ctc" and profile.current_ctc:
         text_values["current_ctc"] = format_salary(profile.current_ctc, label)
-    if key == "notice":
+    if key == "notice" and profile.notice_period >= 0:
         text_values["notice"] = ("Immediately" if profile.notice_period == 0 and not _has(label, r"month|week|day")
                                  else format_notice(profile.notice_period, label))
 

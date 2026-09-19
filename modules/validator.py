@@ -90,7 +90,7 @@ def validate_questions() -> None | ValueError | TypeError:
     check_int(desired_salary, "desired_salary")
     check_string(us_citizenship, "us_citizenship", ["", "U.S. Citizen/Permanent Resident", "Non-citizen allowed to work for any employer", "Non-citizen allowed to work for current employer", "Non-citizen seeking work authorization", "Canadian Citizen/Permanent Resident", "Other"])
     check_string(linkedin_headline, "linkedin_headline")
-    check_int(notice_period, "notice_period")
+    check_int(notice_period, "notice_period", min_value=-1)      # -1 = not set
     check_int(current_ctc, "current_ctc")
     check_string(linkedin_summary, "linkedin_summary")
     check_string(cover_letter, "cover_letter")

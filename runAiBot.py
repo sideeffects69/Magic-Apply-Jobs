@@ -58,7 +58,8 @@ from modules.clickers_and_finders import *
 from modules.validator import validate_config
 from modules.form_profile import Profile
 from modules.job_rules import (job_search_url, parse_card_title, parse_card_subtitle, requires_security_clearance,
-                               mentions_masters_degree, asks_about_visa, extract_years_required)
+                               mentions_masters_degree, asks_about_visa, extract_years_required,
+                               amount_texts, notice_texts, asks_for_amount_or_notice, unknown_text_answer)
 from modules.external_apply import apply_on_external_site, ExternalSettings, APPLIED as EXTERNAL_APPLIED
 
 if use_AI:
@@ -140,17 +141,10 @@ def contains_word(text: str, word: str) -> bool:
     '''
     return re.search(r'\b' + re.escape(word.strip()) + r'\b', text, re.IGNORECASE) is not None
 
-desired_salary_lakhs = str(round(desired_salary / 100000, 2))
-desired_salary_monthly = str(round(desired_salary/12, 2))
-desired_salary = str(desired_salary)
-
-current_ctc_lakhs = str(round(current_ctc / 100000, 2))
-current_ctc_monthly = str(round(current_ctc/12, 2))
-current_ctc = str(current_ctc)
-
-notice_period_months = str(notice_period//30)
-notice_period_weeks = str(notice_period//7)
-notice_period = str(notice_period)
+# Text versions of the salary / notice answers. Anything the person left unset stays blank (never a sample number).
+desired_salary, desired_salary_lakhs, desired_salary_monthly = amount_texts(desired_salary)
+current_ctc, current_ctc_lakhs, current_ctc_monthly = amount_texts(current_ctc)
+notice_period, notice_period_months, notice_period_weeks = notice_texts(notice_period)
 
 aiClient = None
 about_company_for_ai = None  # filled in later, once we're processing a specific job
@@ -765,7 +759,9 @@ def answer_questions(modal: WebElement, questions_list: set, work_location: str,
                         print_lg(f'AI answered "{label_org}": "{answer}"')
                     else:
                         randomly_answered_questions.add((label_org, "text"))
-                        answer = years_of_experience
+                        answer = unknown_text_answer(label, years_of_experience)
+                        if not answer and asks_for_amount_or_notice(label):
+                            print_lg(f'"{label_org}" needs a salary or notice period that is not set in your Profile - leaving it empty instead of guessing.')
                 text.clear()
                 text.send_keys(answer)
                 if do_actions:

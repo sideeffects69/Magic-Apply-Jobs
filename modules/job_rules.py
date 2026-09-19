@@ -69,6 +69,37 @@ def asks_about_visa(label: str) -> bool:
     return _VISA.search(label.lower()) is not None
 
 
+def amount_texts(amount: int) -> tuple[str, str, str]:
+    '''
+    (plain, in lakhs, per month) as text for a salary / CTC. All blank when the person left it unset (0),
+    so a made-up number is never typed into an application.
+    '''
+    if amount <= 0:
+        return "", "", ""
+    return str(amount), str(round(amount / 100000, 2)), str(round(amount / 12, 2))
+
+
+def notice_texts(days: int) -> tuple[str, str, str]:
+    '''(days, months, weeks) as text for a notice period. All blank when unset (-1); 0 means "can start immediately".'''
+    if days < 0:
+        return "", "", ""
+    return str(days), str(days // 30), str(days // 7)
+
+
+def asks_for_amount_or_notice(label: str) -> bool:
+    '''True for the salary / CTC / notice-period questions - the ones that must never be answered with an unrelated number.'''
+    label = label.lower()
+    return any(word in label for word in ("notice", "salary", "compensation", "ctc", "pay"))
+
+
+def unknown_text_answer(label: str, years_of_experience: str) -> str:
+    '''
+    What to type into a text box nothing else could answer: the person's years of experience (a number is usually
+    what such boxes want) - but never for a salary / notice question, where that number would be a wrong answer.
+    '''
+    return "" if asks_for_amount_or_notice(label) else years_of_experience
+
+
 def extract_years_required(text: str) -> int:
     '''
     The largest "N years" figure up to 12 in the text (bigger numbers are usually a company's age),

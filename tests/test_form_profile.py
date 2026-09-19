@@ -105,6 +105,22 @@ def test_zero_notice_period_reads_as_immediately(me):
     assert decide(field("text", "When can you start?"), someone).value == "Immediately"
 
 
+def test_a_profile_with_no_numbers_set_never_has_any_typed_for_it():
+    # What a brand-new user has: nothing entered. The tool must ask a person (or the AI), not type a made-up number.
+    nobody = Profile.from_values(first_name="Asha", last_name="Rao", email="asha@example.org", phone="+91 98765 43210",
+                                 desired_salary="", current_ctc=0, notice_period="", years_of_experience="")
+    for label in ("Expected salary", "Current CTC", "Notice period (days)", "How many years of experience do you have?"):
+        decision = decide(field("text", label), nobody)
+        assert decision.action == "unknown", f"{label!r} was answered {decision.value!r}"
+    assert decide(field("text", "Notice period"), Profile()).action == "unknown"      # even a bare Profile()
+
+
+def test_a_notice_period_of_minus_one_is_not_read_as_one_day():
+    # The bot hands its numbers over as text; "-1" used to lose its sign and become 1.
+    assert Profile.from_values(notice_period="-1").notice_period == -1
+    assert decide(field("text", "Notice period"), Profile.from_values(notice_period="-1")).action == "unknown"
+
+
 def test_number_inputs_get_digits_only(me):
     assert decide(field("number", "Expected CTC in lakhs", input_type="number"), me).value == "9.00"
     assert decide(field("number", "Years of experience", input_type="number"), me).value == "3"
