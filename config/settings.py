@@ -66,8 +66,8 @@ external_apply_max_steps = 25          # Integers >= 3
 # Safety cap on how many applications (Easy Apply + external combined) the bot will
 # submit in a single calendar day, counted across all your runs that day - not just
 # this one. Protects your LinkedIn account from being flagged for automated activity.
-# Set to -1 to disable (no daily cap, only `switch_number` per search term applies).
-max_applications_per_day = -1       # -1 for no limit, or a positive integer like 100
+# Set to -1 to disable (no daily cap, only `switch_number` per search term applies). Not recommended.
+max_applications_per_day = 40       # -1 for no limit, or a positive integer. LinkedIn caps Easy Apply at roughly 50 a day, so 40 keeps your account safe
 
 
 

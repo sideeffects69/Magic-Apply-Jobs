@@ -234,8 +234,8 @@ def restore_backup(payload, data_dir: str | None = None, config_validator=None) 
             raise BackupError("This backup contains a resume file with an unsafe name.")
         try:
             content = base64.b64decode(encoded, validate=True)
-        except (binascii.Error, ValueError):
-            raise BackupError(f"The resume file '{name}' in this backup is damaged.")
+        except (binascii.Error, ValueError) as error:
+            raise BackupError(f"The resume file '{name}' in this backup is damaged.") from error
         if len(content) > MAX_RESUME_FILE_BYTES:
             raise BackupError(f"The resume file '{name}' in this backup is too large.")
         decoded_files[name] = content

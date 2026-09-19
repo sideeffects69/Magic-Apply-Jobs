@@ -205,7 +205,7 @@ def _validate_settings(payload: dict) -> tuple[dict, list]:
             try:
                 coerced.setdefault(section, {})[key] = _coerce(field["type"], value)
             except ValueError as err:
-                raise ValueError(f"Invalid value for '{section}.{key}': {err}")
+                raise ValueError(f"Invalid value for '{section}.{key}': {err}") from err
     return coerced, unknown
 
 
@@ -341,9 +341,9 @@ def get_applied_jobs():
     try:
         jobs = []
         statuses = _load_statuses()
-        with open(csv_path, 'r', encoding='utf-8') as f:
+        with open(csv_path, 'r', encoding='utf-8', newline='') as f:
             for row in csv.DictReader(f):
-                job = {key: row.get(col, '') for col, key in _HISTORY_FIELDS.items()}
+                job = {key: row.get(col) or '' for col, key in _HISTORY_FIELDS.items()}
                 job['Status'] = statuses.get(job['Job_ID'], {}).get('status', 'Applied')
                 jobs.append(job)
         return jsonify(jobs)
@@ -398,21 +398,25 @@ def mark_job_applied(job_id):
     if not os.path.exists(csv_path):
         return jsonify({"error": f"History file not found at {csv_path}"}), 404
     try:
-        with open(csv_path, 'r', encoding='utf-8') as f:
+        with open(csv_path, 'r', encoding='utf-8', newline='') as f:
             reader = csv.DictReader(f)
             columns = reader.fieldnames
             rows = list(reader)
-        matched = False
-        for row in rows:
-            if row.get('Job ID') == job_id:
-                row['Date Applied'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                matched = True
-        if not matched:
+        target = next((row for row in rows if row.get('Job ID') == job_id), None)
+        if target is None:
             return jsonify({"error": f"Job ID {job_id} not found"}), 404
-        with open(csv_path, 'w', encoding='utf-8', newline='') as f:
-            writer = csv.DictWriter(f, fieldnames=columns)
+        current = (target.get('Date Applied') or '').strip()
+        if current and current != 'Pending':
+            # The bot (or an earlier click) already recorded the real date - clicking a link must not overwrite it.
+            return jsonify({"message": "Already marked as applied.", "unchanged": True}), 200
+        target['Date Applied'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        # Write to a side file and swap it in, so a crash mid-write can't destroy the whole history.
+        temp_path = csv_path + ".tmp"
+        with open(temp_path, 'w', encoding='utf-8', newline='') as f:
+            writer = csv.DictWriter(f, fieldnames=columns, extrasaction='ignore', restval='')
             writer.writeheader()
             writer.writerows(rows)
+        os.replace(temp_path, csv_path)
         return jsonify({"message": "Date Applied updated."}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -427,12 +431,12 @@ from modules import resume_builder
 @app.route('/api/resume-builder/status', methods=['GET'])
 def api_resume_builder_status():
     '''Whether RenderCV is installed, so the UI can show an install hint instead of failing.'''
-    return jsonify({"available": resume_builder.is_available()})
+    return jsonify({"available": resume_builder.is_available(), "frozen": FROZEN})
 
 
 @app.route('/api/resume-builder/yaml', methods=['GET'])
 def api_get_resume_yaml():
-    '''Returns the current content of config/resume_data.yaml.'''
+    '''Returns the current content of the saved resume data (resume_data.yaml).'''
     try:
         with open(resume_builder.RESUME_YAML_PATH, 'r', encoding='utf-8') as f:
             return jsonify({"content": f.read()})
@@ -444,7 +448,7 @@ def api_get_resume_yaml():
 
 @app.route('/api/resume-builder/yaml', methods=['POST'])
 def api_save_resume_yaml():
-    '''Saves edited YAML content back to config/resume_data.yaml.'''
+    '''Saves edited YAML content back to resume_data.yaml.'''
     payload = request.get_json(silent=True)
     if not isinstance(payload, dict) or not isinstance(payload.get("content"), str):
         return jsonify({"error": "Expected a JSON object with a string 'content' field"}), 400
@@ -459,7 +463,7 @@ def api_save_resume_yaml():
 
 @app.route('/api/resume-builder/generate', methods=['POST'])
 def api_generate_resume():
-    '''Renders config/resume_data.yaml into a PDF via RenderCV.'''
+    '''Renders resume_data.yaml into a PDF via RenderCV.'''
     success, message = resume_builder.generate_ats_resume()
     if not success:
         return jsonify({"success": False, "error": message}), 400
@@ -507,9 +511,9 @@ def get_failed_jobs():
         return jsonify({"error": "No failed applications recorded yet."}), 404
     try:
         jobs = []
-        with open(csv_path, 'r', encoding='utf-8') as f:
+        with open(csv_path, 'r', encoding='utf-8', newline='') as f:
             for row in csv.DictReader(f):
-                jobs.append({key: row.get(col, '') for col, key in _FAILED_FIELDS.items()})
+                jobs.append({key: row.get(col) or '' for col, key in _FAILED_FIELDS.items()})
         return jsonify(jobs)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -628,6 +632,7 @@ def api_run():
         if _is_running():
             return jsonify({"running": True, "pid": _bot_proc.pid,
                             "message": "The tool is already running."})
+        log_file = None
         try:
             # Truncate the log at the start of each run.
             log_file = open(LOG_PATH, "w", encoding="utf-8")
@@ -652,7 +657,11 @@ def api_run():
             else:
                 popen_kwargs["start_new_session"] = True
             _bot_proc = subprocess.Popen(_bot_command(), **popen_kwargs)
+            # The bot has its own copy of the handle; close ours explicitly instead of relying on garbage collection.
+            log_file.close()
         except Exception as err:
+            if log_file is not None:
+                log_file.close()
             return jsonify({"running": False, "error": str(err)}), 500
         try:
             with open(PID_PATH, "w", encoding="utf-8") as pid_file:
@@ -869,7 +878,7 @@ def _csv_row_count(filename: str) -> int:
     if not os.path.exists(csv_path):
         return 0
     try:
-        with open(csv_path, 'r', encoding='utf-8') as f:
+        with open(csv_path, 'r', encoding='utf-8', newline='') as f:
             return max(0, sum(1 for _ in csv.reader(f)) - 1)
     except OSError:
         return 0
@@ -907,7 +916,15 @@ def api_logs():
                 offset = 0
             log_file.seek(offset)
             data = log_file.read()
-        content = data.decode("utf-8", errors="replace")
+        for trim in range(4):                       # a chunk may end part-way through an emoji / accented letter
+            try:
+                content = data[:len(data) - trim].decode("utf-8")
+                data = data[:len(data) - trim]
+                break
+            except UnicodeDecodeError:
+                continue
+        else:
+            content = data.decode("utf-8", errors="replace")
         return jsonify({"content": content, "next_offset": offset + len(data)})
     except OSError as err:
         return jsonify({"content": "", "next_offset": offset, "error": str(err)})
@@ -986,6 +1003,26 @@ def _claim_port(port: int):
         return None
 
 
+def _claim_free_port(start: int, tries: int = 25):
+    '''Claims the first free port from `start` upward. Returns (port, held_socket), or (None, None).'''
+    for port in range(start, start + tries):
+        probe = _claim_port(port)
+        if probe is not None:
+            return port, probe
+    return None, None
+
+
+def _wait_for_running_instance(seconds: float = 5.0):
+    '''Waits briefly for a panel that another launch is still starting (its port answers a moment after it is claimed).'''
+    import time
+    end = time.monotonic() + seconds
+    while True:
+        port = _running_instance_port()
+        if port is not None or time.monotonic() >= end:
+            return port
+        time.sleep(0.5)
+
+
 def main() -> None:
     '''Starts the local control panel (or reuses one that is already running).'''
     # SECURITY: localhost only, debug OFF. This app handles credentials.
@@ -994,13 +1031,19 @@ def main() -> None:
     requested = os.environ.get("PORT", "").strip()
     target_port = int(requested) if requested.isdigit() else 5000
 
-    probe = _claim_port(target_port)
-    if probe is None:
-        # Something already holds this port. If it's a previous launch of this
-        # same app (e.g. an earlier double-click of start.bat that's still
-        # alive), reuse it instead of starting a second server that would
-        # collide with the first one over logs/log.txt and .bot_run.log.
-        existing_port = _running_instance_port() or target_port
+    # A panel we started earlier may be on a different port than the one asked for (if 5000 was busy),
+    # so ask the lock file first.
+    existing_port = _running_instance_port()
+    probe = None
+    if existing_port is None:
+        probe = _claim_port(target_port)
+        if probe is None:
+            # The port is taken. Either another launch of this app is still starting (wait for it) or a
+            # completely different program owns it (macOS AirPlay uses 5000) - never send the person there.
+            existing_port = _wait_for_running_instance()
+    if existing_port is not None:
+        # An earlier launch of this same app is alive (e.g. start.bat was double-clicked twice): reuse it
+        # instead of starting a second server that would collide with the first over the log and data files.
         url = "http://127.0.0.1:%d" % existing_port
         print(
             "\n  The control panel is already running at:  %s\n"
@@ -1013,6 +1056,12 @@ def main() -> None:
         sys.exit(0)
 
     port = target_port
+    if probe is None:
+        port, probe = _claim_free_port(target_port + 1)
+        if probe is None:
+            print("\n  Could not find a free port to start the control panel on. Close other programs and try again.\n", flush=True)
+            sys.exit(1)
+        print("\n  Port %d is used by another program - using port %d instead.\n" % (target_port, port), flush=True)
     _write_lock(port)
     # Only the instance that owns the panel installs the erase - a second launch that
     # exits above must never wipe the first one's data.

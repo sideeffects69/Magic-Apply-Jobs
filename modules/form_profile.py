@@ -34,6 +34,22 @@ _TEMPLATE_PLACEHOLDERS = {
 }
 
 
+_NUMBER_FIELDS = ("desired_salary", "current_ctc", "notice_period")
+
+
+def _to_int(value) -> int:
+    '''The bot's config turns these into text ("1200000") before we see them; accept either, never raise.'''
+    if isinstance(value, bool):
+        return 0
+    if isinstance(value, (int, float)):
+        return int(value)
+    digits = re.sub(r"[^\d.]", "", str(value or ""))
+    try:
+        return int(float(digits)) if digits else 0
+    except ValueError:
+        return 0
+
+
 @dataclass
 class Profile:
     first_name: str = ""
@@ -75,6 +91,10 @@ class Profile:
         for name, value in values.items():
             if name not in known:
                 continue
+            if name in _NUMBER_FIELDS:
+                value = _to_int(value)
+            elif isinstance(value, (int, float)) and not isinstance(value, bool):
+                value = str(value)
             if isinstance(value, str):
                 value = value.strip()
                 if value.lower() in _TEMPLATE_PLACEHOLDERS.get(name, ()):
@@ -137,15 +157,43 @@ def is_placeholder_option(text: str) -> bool:
 _DECLINE = r"decline|prefer not|do not wish|don't wish|not wish|choose not|not to (say|disclose|answer|identify)|rather not|do not want|don't want"
 
 
+def _number_fits(option: str, value: float):
+    '''
+    Does `value` fall in the range an option describes ("3-5 years", "10+", "less than 1", "Over 5")?
+    True / False, or None when the option holds no number at all.
+    '''
+    text = _norm(option)
+    numbers = [float(n) for n in re.findall(r"\d+(?:\.\d+)?", text)]
+    if not numbers:
+        return None
+    if re.search(r"less than|under|below|fewer than|<", text):
+        return value < numbers[0]
+    span = re.search(r"(\d+(?:\.\d+)?)\s*(?:-|\u2013|to)\s*(\d+(?:\.\d+)?)", text)
+    if span:
+        return float(span.group(1)) <= value <= float(span.group(2))
+    if re.search(r"more than|over|above|greater than|>", text):
+        return value > numbers[0]
+    if re.search(r"\d\s*\+|or more|and above|and over|at least|plus", text):
+        return value >= numbers[0]
+    return value == numbers[0]
+
+
 def choose_option(options: list, desired: str):
     '''
     Picks the index of the option that best matches `desired`, or None.
-    Understands "Decline", "Yes" and "No" as intents rather than literal text.
+    Understands "Decline", "Yes" and "No" as intents rather than literal text, and picks a numeric answer
+    by range ("3" belongs in "3-5 years", not in "10-13").
     '''
     if not options or not desired:
         return None
     normalized = [_norm(o) for o in options]
     want = _norm(desired)
+
+    if re.fullmatch(r"\d+(?:\.\d+)?", want) and any(re.search(r"\d", o) for o in normalized):
+        for index, option in enumerate(options):
+            if not is_placeholder_option(option) and _number_fits(option, float(want)):
+                return index
+        return None
 
     def first(predicate):
         for index, text in enumerate(normalized):
@@ -184,6 +232,35 @@ def format_notice(days: int, label: str) -> str:
     if _has(label, r"\bweek"):
         return str(days // 7)
     return str(days)
+
+
+_COUNTRIES = {
+    "united states": "us", "u.s.": "us", "u.s.a.": "us", "usa": "us", "america": "us",
+    "united kingdom": "uk", "uk": "uk", "great britain": "uk",
+    "canada": "ca", "india": "in", "australia": "au", "germany": "de", "singapore": "sg",
+    "united arab emirates": "ae", "uae": "ae", "ireland": "ie", "france": "fr", "netherlands": "nl",
+}
+
+
+def _countries_in(text: str) -> set:
+    found = set()
+    normalized = _norm(text)
+    for word, code in _COUNTRIES.items():
+        if re.search(r"(?<![a-z])" + re.escape(word) + r"(?![a-z])", normalized):
+            found.add(code)
+    if re.search(r"\b(?:in|the|for)\s+us\b", normalized):
+        found.add("us")
+    return found
+
+
+def _countries_authorised_in(profile: "Profile") -> set:
+    home = _countries_in(profile.country)
+    citizenship = _norm(profile.us_citizenship)
+    if citizenship.startswith("u.s. citizen") or citizenship.startswith("non-citizen allowed"):
+        home.add("us")
+    if citizenship.startswith("canadian"):
+        home.add("ca")
+    return home
 
 
 _MARKETING = r"newsletter|marketing|promotion|talent (community|network|pool)|stay in touch|job alert|receive (e-?mail|sms|text|updates|notifications)|subscribe|keep me (posted|updated)|contact me (about|regarding) (other|future)"
@@ -228,7 +305,7 @@ def classify(field_info: FieldInfo) -> str:
         (r"(current|present|most recent|previous|last) (company|employer|organi[sz]ation)|^employer$|^company$", "employer"),
         (r"(current|present) (salary|ctc|compensation|pay)|current annual", "current_ctc"),
         (r"salary|ctc|compensation|remuneration|expected pay|pay expectation", "desired_salary"),
-        (r"notice period|how soon can you (join|start)|available to (join|start)|earliest (start|joining)|when can you (join|start)|joining (time|date)|availability", "notice"),
+        (r"notice period|how soon can you (join|start)|available to (join|start)|earliest (start|joining)|when can you (join|start)|joining (time|date)|start date|date of joining|availability to (join|start)", "notice"),
         (r"(years?|yrs?)( of)?( (relevant|total|professional|work|industry|overall))* experience|experience.*\byears?\b|how many years", "years"),
         (r"cover letter|motivation letter|letter of (interest|motivation)", "cover_letter"),
         (r"\bheadline\b", "headline"),
@@ -288,9 +365,15 @@ def decide(field_info: FieldInfo, profile: Profile, today: str = "") -> Decision
     if key == "visa":
         yes_no = "Yes" if profile.require_visa.strip().lower() == "yes" else "No"
     elif key == "work_auth":
-        yes_no = "No" if _has(_norm(profile.us_citizenship), r"seeking work authori") else "Yes"
+        if _has(_norm(profile.us_citizenship), r"seeking work authori"):
+            yes_no = "No"                                # said so explicitly: that is the answer
+        else:
+            asked_about = _countries_in(field_info.label)
+            if asked_about and not (asked_about & _countries_authorised_in(profile)):
+                return Decision("unknown", key=key, reason="asks about work authorization in a country that isn't yours - the tool won't claim it")
+            yes_no = "Yes"
     elif key == "relocate":
-        yes_no = "Yes"
+        return Decision("unknown", key=key, reason="willingness to relocate isn't in your profile")
     elif key == "adult":
         yes_no = "Yes"
 
@@ -343,6 +426,8 @@ def decide(field_info: FieldInfo, profile: Profile, today: str = "") -> Decision
         return Decision("choose", value=field_info.options[index], key=key)
 
     # text-like controls
+    if kind == "textarea" and key not in ("summary", "cover_letter", "headline", "hear_about", "street"):
+        return Decision("unknown", key=key, reason="a free-text box wants more than a single profile value")
     if key in eeo:
         return Decision("unknown", key=key, reason="demographic question asked as free text")
     if yes_no:

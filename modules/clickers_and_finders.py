@@ -22,6 +22,15 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.common.action_chains import ActionChains
 
+def xpath_literal(text: str) -> str:
+    '''An XPath string literal for any text - including text that contains quotes, which would otherwise break the query.'''
+    if '"' not in text:
+        return '"' + text + '"'
+    if "'" not in text:
+        return "'" + text + "'"
+    return "concat(" + ", '\"', ".join('"' + part + '"' for part in text.split('"')) + ")"
+
+
 # Click Functions
 def wait_span_click(driver: WebDriver, text: str, time: float=5.0, click: bool=True, scroll: bool=True, scrollTop: bool=False) -> WebElement | bool:
     '''
@@ -34,7 +43,7 @@ def wait_span_click(driver: WebDriver, text: str, time: float=5.0, click: bool=T
     '''
     if text:
         try:
-            button = WebDriverWait(driver,time).until(EC.presence_of_element_located((By.XPATH, './/span[normalize-space(.)="'+text+'"]')))
+            button = WebDriverWait(driver,time).until(EC.presence_of_element_located((By.XPATH, './/span[normalize-space(.)=' + xpath_literal(text) + ']')))
             if scroll:  scroll_to_view(driver, button, scrollTop)
             if click:
                 button.click()
@@ -53,7 +62,7 @@ def multi_sel(driver: WebDriver, texts: list, time: float=5.0) -> None:
     for text in texts:
         wait_span_click(driver, text, time, False)
         try:
-            button = WebDriverWait(driver,time).until(EC.presence_of_element_located((By.XPATH, './/span[normalize-space(.)="'+text+'"]')))
+            button = WebDriverWait(driver,time).until(EC.presence_of_element_located((By.XPATH, './/span[normalize-space(.)=' + xpath_literal(text) + ']')))
             scroll_to_view(driver, button)
             button.click()
             buffer(click_gap)
@@ -69,12 +78,16 @@ def multi_sel_noWait(driver: WebDriver, texts: list, actions: ActionChains = Non
     '''
     for text in texts:
         try:
-            button = driver.find_element(By.XPATH, './/span[normalize-space(.)="'+text+'"]')
+            button = driver.find_element(By.XPATH, './/span[normalize-space(.)=' + xpath_literal(text) + ']')
             scroll_to_view(driver, button)
             button.click()
             buffer(click_gap)
         except Exception as e:
-            if actions: company_search_click(driver,actions,text)
+            if actions:
+                try:
+                    company_search_click(driver,actions,text)
+                except Exception:
+                    print_lg("Couldn't add '"+text+"' to the company filter - continuing with the other filters.")
             else:   print_lg("Click Failed! Didn't find '"+text+"'")
             # print_lg(e)
 
@@ -83,7 +96,7 @@ def boolean_button_click(driver: WebDriver, actions: ActionChains, text: str) ->
     Tries to click on the boolean button with the given `text` text.
     '''
     try:
-        list_container = driver.find_element(By.XPATH, './/h3[normalize-space()="'+text+'"]/ancestor::fieldset')
+        list_container = driver.find_element(By.XPATH, './/h3[normalize-space()=' + xpath_literal(text) + ']/ancestor::fieldset')
         button = list_container.find_element(By.XPATH, './/input[@role="switch"]')
         scroll_to_view(driver, button)
         actions.move_to_element(button).click().perform()

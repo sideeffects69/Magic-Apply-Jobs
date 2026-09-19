@@ -25,16 +25,16 @@ def check_int(var: int, var_name: str, min_value: int=0) -> bool | TypeError | V
     return True
 
 def check_boolean(var: bool, var_name: str) -> bool | ValueError:
-    if var == True or var == False: return True
+    if isinstance(var, bool): return True
     raise ValueError(f'The variable "{var_name}" in "{__validation_file_path}" expects a Boolean input `True` or `False`, not "{var}" of type "{type(var)}" instead!\n\nSolution:\nPlease open "{__validation_file_path}" and update "{var_name}" to either `True` or `False` (case-sensitive, T and F must be CAPITAL/uppercase).\nExample: `{var_name} = True`\n\nNOTE: Do NOT surround Boolean values in quotes ("True")X !\n\n')
 
-def check_string(var: str, var_name: str, options: list=[], min_length: int=0) -> bool | TypeError | ValueError:
+def check_string(var: str, var_name: str, options: tuple | list=(), min_length: int=0) -> bool | TypeError | ValueError:
     if not isinstance(var, str): raise TypeError(f'Invalid input for {var_name}. Expecting a String!')
     if min_length > 0 and len(var) < min_length: raise ValueError(f'Invalid input for {var_name}. Expecting a String of length at least {min_length}!')
     if len(options) > 0 and var not in options: raise ValueError(f'Invalid input for {var_name}. Expecting a value from {options}, not {var}!')
     return True
 
-def check_list(var: list, var_name: str, options: list=[], min_length: int=0) -> bool | TypeError | ValueError:
+def check_list(var: list, var_name: str, options: tuple | list=(), min_length: int=0) -> bool | TypeError | ValueError:
     if not isinstance(var, list): 
         raise TypeError(f'Invalid input for {var_name}. Expecting a List!')
     if len(var) < min_length: raise ValueError(f'Invalid input for {var_name}. Expecting a List of length at least {min_length}!')
@@ -67,7 +67,7 @@ def validate_personals() -> None | ValueError | TypeError:
     check_string(zipcode, "zipcode")
     check_string(country, "country")
     
-    check_string(ethnicity, "ethnicity", ["Decline", "Hispanic/Latino", "American Indian or Alaska Native", "Asian", "Black or African American", "Native Hawaiian or Other Pacific Islander", "White", "Other"],  min_length=0)
+    check_string(ethnicity, "ethnicity", ["", "Decline", "Hispanic/Latino", "American Indian or Alaska Native", "Asian", "Black or African American", "Native Hawaiian or Other Pacific Islander", "White", "Other"],  min_length=0)
     check_string(gender, "gender", ["Male", "Female", "Other", "Decline", ""])
     check_string(disability_status, "disability_status", ["Yes", "No", "Decline"])
     check_string(veteran_status, "veteran_status", ["Yes", "No", "Decline"])
@@ -88,7 +88,7 @@ def validate_questions() -> None | ValueError | TypeError:
     check_string(website, "website")
     check_string(linkedIn, "linkedIn")
     check_int(desired_salary, "desired_salary")
-    check_string(us_citizenship, "us_citizenship", ["U.S. Citizen/Permanent Resident", "Non-citizen allowed to work for any employer", "Non-citizen allowed to work for current employer", "Non-citizen seeking work authorization", "Canadian Citizen/Permanent Resident", "Other"])
+    check_string(us_citizenship, "us_citizenship", ["", "U.S. Citizen/Permanent Resident", "Non-citizen allowed to work for any employer", "Non-citizen allowed to work for current employer", "Non-citizen seeking work authorization", "Canadian Citizen/Permanent Resident", "Other"])
     check_string(linkedin_headline, "linkedin_headline")
     check_int(notice_period, "notice_period")
     check_int(current_ctc, "current_ctc")
@@ -157,8 +157,8 @@ def validate_secrets() -> None | ValueError | TypeError:
     global __validation_file_path
     __validation_file_path = "config/secrets.py"
 
-    check_string(username, "username", min_length=5)
-    check_string(password, "password", min_length=5)
+    check_string(username, "username")      # optional: blank means "log in by hand"
+    check_string(password, "password")
 
     check_string(google_email, "google_email")
     check_boolean(use_AI, "use_AI")

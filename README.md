@@ -28,8 +28,10 @@ New here, or not comfortable editing code? Use the built-in control panel. You s
     - **Linux:** `start.sh` (run `./start.sh` in a terminal)
 
     **On Windows, `start.bat` checks your computer and installs anything that is missing - Python 3.12, Google Chrome and all the tool's packages - so there is nothing to install by hand.** The first run can take a few minutes; after that it starts in seconds. (On macOS and Linux, install [Python 3.10+](https://www.python.org/downloads/) and [Google Chrome](https://www.google.com/chrome) first; the launcher does the rest.)
-3. Your browser opens the **control panel** automatically (the exact address, e.g. `http://127.0.0.1:5000`, is shown in the launcher window). If you saved a backup file last time, click **Restore from backup** and everything fills back in. Otherwise fill in the tabs - **Account, Profile, Search, Filters, Run settings** - and click **Save**.
-4. Go to the **Run** tab and click **Start**. A Chrome window opens and begins applying - keep it in the foreground. You can watch progress in the log and click **Stop** any time.
+3. Your browser opens the **control panel** automatically (the exact address, e.g. `http://127.0.0.1:5000`, is shown in the launcher window; if port 5000 is used by another program - macOS AirPlay does this - the next free port is used automatically). If you saved a backup file last time, click **Restore from backup** and everything fills back in. Otherwise fill in the tabs - **Account, Profile, Search, Filters, Run settings** - and click **Save**.
+4. Go to the **Run** tab and click **Start**. It shows what it is about to search for, and if you changed a setting without saving it, offers to save it first (the bot only uses *saved* settings). A Chrome window then opens and begins applying - keep it in the foreground. You can watch progress in the log and click **Stop** any time.
+
+> **Before your first run:** open the **Profile** tab and set your own details. The numbers pre-filled for *years of experience*, *desired salary*, *current salary* and *notice period* are only samples, and they are what gets typed into forms if you leave them.
 5. When you're done, click **Download backup** (if you want to keep your details), then **Finish & erase**.
 
 The control panel is reachable only from your own computer, and it refuses requests coming from other websites.
@@ -70,6 +72,9 @@ It is deliberately cautious:
 - **It never types a Google password, and never gets past a CAPTCHA or 2-step verification.** Those are left to you: the tool waits, you finish that screen in the browser, and it carries on.
 - Marketing opt-ins ("send me the newsletter") are left unticked; privacy/terms consent boxes are ticked.
 - Your name, email and phone must be set first (Profile tab). The template placeholders (`First`, `123 Main Street`, ...) are never sent to an employer.
+- It only says you are authorized to work in **your own** country - a question about another country (e.g. the US, when you live in India) is left for you. It also doesn't assume you will relocate.
+- Number questions are answered by range: 3 years goes in "3-5 years", never in "10-13 years".
+- If Google's screen asks for more than a sign-in (Drive, Gmail, "see, edit, delete"), it stops and lets you decide; it never picks a Google account by guessing.
 - If LinkedIn's daily Easy Apply cap is reached, the tool carries on with company-site jobs instead of stopping.
 
 **Honest limits.** Career sites are all different. The tool works on ordinary forms (including forms inside iframes, styled radio buttons and multi-page flows), but some will always need you: sites that force an email-and-password account with no Google option, heavily custom dropdowns, CAPTCHAs, and file-upload-only steps. Those end up in the Failed jobs list with the company's link so you can finish them by hand. It has been tested against realistic local mock sites, not against every employer on the internet - watch the first few runs.

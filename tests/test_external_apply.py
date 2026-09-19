@@ -123,6 +123,7 @@ def test_a_required_question_it_cannot_answer_is_never_guessed_or_submitted(driv
 
     assert result.status == NEEDS_MANUAL
     assert any("Kubernetes" in label for label in result.unresolved), result.unresolved
+    assert "unrecognised question" in result.detail, "the message should say WHY it would not answer"
     assert site.submissions == [], "must not submit with a required field empty"
 
 
@@ -270,6 +271,69 @@ def test_visually_hidden_radios_and_checkboxes_are_operated_through_their_labels
     assert site.submissions == [{"sponsor": "no", "privacy": True}]
 
 
+def test_it_never_guesses_which_google_account_to_use(driver, site, me, resume):
+    driver.get(site.base + "/login.html")
+
+    # The configured account is not in the list (which shows two other accounts): must not click the first one.
+    result = run(driver, me, resume, quick(google_email="nobody@example.com"))
+    assert result.status == NEEDS_MANUAL
+    assert site.google_picks == [], "signing in with the wrong Google account could apply under a stranger's identity"
+
+    # Nothing configured and several accounts listed: also a guess.
+    site.reset()
+    driver.get(site.base + "/login.html")
+    result = run(driver, me, resume, quick(google_email=""))
+    assert result.status == NEEDS_MANUAL
+    assert site.google_picks == []
+
+
+def test_a_single_listed_google_account_is_used_when_none_is_configured(driver, site, me, resume):
+    driver.get(site.base + "/login-one.html")
+
+    result = run(driver, me, resume, quick(google_email=""))
+
+    assert result.status == APPLIED, result
+    assert site.google_picks == ["solo@example.com"]
+
+
+def test_a_plain_google_sign_in_consent_is_approved(driver, site, me, resume):
+    driver.get(site.base + "/login-consent.html")
+
+    result = run(driver, me, resume, quick(google_email="tester@example.com"))
+
+    assert result.status == APPLIED, result
+    assert "consent-clicked" in site.events
+
+
+def test_google_screens_asking_for_drive_or_gmail_access_are_never_approved(driver, site, me, resume):
+    driver.get(site.base + "/login-risky.html")
+
+    result = run(driver, me, resume, quick(google_email="tester@example.com"))
+
+    assert result.status == NEEDS_MANUAL
+    assert "allow-clicked" not in site.events, "granting an employer's site access to Drive or Gmail must be your decision"
+
+
+def test_a_field_revealed_by_an_earlier_answer_is_filled_too(driver, site, me, resume):
+    driver.get(site.base + "/dependent.html")
+
+    result = run(driver, me, resume)
+
+    assert result.status == APPLIED, result
+    assert site.submissions == [{"country": "India", "state": "Illinois"}]
+
+
+def test_an_optional_essay_box_is_left_alone_and_never_sent_to_the_ai(driver, site, me, resume):
+    driver.get(site.base + "/optional-textarea.html")
+    asked = []
+
+    result = run(driver, me, resume, ask_ai=lambda question, options, kind: asked.append(question) or "generated text")
+
+    assert result.status == APPLIED, result
+    assert asked == []
+    assert site.submissions == [{"more": ""}]
+
+
 def test_a_google_screen_that_wants_a_password_is_handed_to_the_person(driver, site, me, resume):
     driver.get(site.base + "/login-password.html")
 
@@ -299,7 +363,10 @@ def bot(driver, site, tmp_path, monkeypatch, resume):
     (tmp_path / "logs" / "screenshots").mkdir(parents=True)
     for name, value in dict(
         first_name="Asha", middle_name="", last_name="Rao", email="tester@example.com", phone_number="+91 98765 43210",
-        current_city="Springfield", google_email="tester@example.com", use_AI=False, aiClient=None, run_in_background=False,
+        current_city="Springfield", state="Illinois", zipcode="62701", country="India", street="", linkedIn="", website="",
+        us_citizenship="", gender="", ethnicity="", disability_status="", veteran_status="", recent_employer="",
+        linkedin_headline="", linkedin_summary="", years_of_experience="3", desired_salary="900000", current_ctc="600000",
+        notice_period="30", require_visa="No", google_email="tester@example.com", use_AI=False, aiClient=None, run_in_background=False,
         pause_before_submit=False, external_manual_wait_seconds=0, external_apply_timeout_seconds=150,
         external_apply_max_steps=14, use_google_login=True, easy_apply_only=False, close_tabs=False,
         default_resume_path=resume, failed_file_name=str(tmp_path / "failed.csv"), logs_folder_path=str(tmp_path / "logs"),

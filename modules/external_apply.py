@@ -179,7 +179,7 @@ document.querySelectorAll('input[type=file]').forEach(el => {
   if (el.disabled) return;
   const container = el.closest('label, div, li, section, fieldset') || el.parentElement;
   const l = (el.id && document.querySelector('label[for="' + CSS.escape(el.id) + '"]')) || el.closest('label');
-  const label = (text(l) + ' ' + (el.getAttribute('aria-label') || '') + ' ' + text(container).slice(0, 120) + ' ' + (el.name || '') + ' ' + (el.id || '')).toLowerCase();
+  const label = [text(l), el.getAttribute('aria-label') || '', text(container).slice(0, 120), el.name || '', el.id || ''].join(' | ').toLowerCase();
   out.push({el: el, label: label, has_file: !!(el.files && el.files.length), accept: el.accept || ''});
 });
 return out;
@@ -275,6 +275,10 @@ _COOKIE_ACCEPT = re.compile(r"^(accept( all)?( cookies)?|allow( all)?( cookies)?
 _RESUME_LABEL = re.compile(r"resume|cv\b|curriculum")
 _NOT_RESUME = re.compile(r"cover|photo|picture|portfolio|transcript|certificate|letter|passport|id proof|avatar|logo|reference|writing sample")
 _FRAME_SKIP = re.compile(r"recaptcha|hcaptcha|doubleclick|googletagmanager|facebook|youtube|google\.com/gsi|accounts\.google|analytics|adsystem|stripe|intercom|zendesk|drift|chat")
+# A plain "sign in with Google" screen only shares your name, email and picture. Anything that asks for more than that
+# (Drive, Gmail, Calendar, "see, edit, delete"...) must be reviewed by the person - never clicked through automatically.
+_GOOGLE_RISKY = re.compile(r"see, edit|edit, create|create, and delete|delete all|permanently delete|google drive|gmail|google calendar|google contacts|"
+                           r"read, compose|send email|manage your|all of your|full access|view and manage|offline access|make requests|access to your google account")
 _GOOGLE_BLOCKED = re.compile(r"may not be secure|couldn'?t sign you in|this browser or app|try using a different browser")
 
 
@@ -300,6 +304,7 @@ class ExternalApplier:
         self._google_attempts = 0
         self._submit_clicks = 0
         self._advanced = False              # True once we have pressed Next/Submit ourselves
+        self._reasons = {}                  # question label -> why the tool would not answer it
         self._signin_clicks = 0
         self._deadline = 0.0
 
@@ -369,8 +374,7 @@ class ExternalApplier:
         while time.monotonic() < end:
             self._sleep(0.5)
             try:
-                self.driver.current_window_handle
-                if self._signature() != before:
+                if self.driver.current_window_handle and self._signature() != before:
                     return True
             except WebDriverException:
                 return True        # the tab we were on is gone (e.g. a pop-up closed): that is a change
@@ -606,8 +610,10 @@ class ExternalApplier:
         filled = 0
         for info, raw in self._collect_fields():
             decision = decide(info, self.profile)
-            if decision.action == "unknown" and (info.required or info.kind == "textarea") and self._is_empty(info):
+            if decision.action == "unknown" and info.required and self._is_empty(info):
                 decision = self._ai_decision(info) or decision
+            if decision.action == "unknown" and decision.reason:
+                self._reasons[info.label or info.name.strip() or info.kind] = decision.reason
             try:
                 if decision.action == "fill" and self._type_into(raw, decision.value):
                     filled += 1
@@ -775,7 +781,20 @@ class ExternalApplier:
                                             lambda: self._google_finished(window), self.settings.manual_wait_seconds):
                     return False
                 continue
-            if self._pick_google_account(want):
+            accounts = self._google_accounts()
+            if accounts:
+                chosen = self._choose_google_account(accounts, want)
+                if chosen is None:
+                    reason = (f'your Google account "{self.settings.google_email}" is not in the list' if want
+                              else "several Google accounts are listed")
+                    if not self._wait_for_human(f"pick the Google account to use in the browser window ({reason})",
+                                                lambda: not self._google_accounts() or self._google_finished(window),
+                                                self.settings.manual_wait_seconds):
+                        self.log(f"Not choosing a Google account for you: {reason}.")
+                        return False
+                    continue
+                self.log(f"Choosing Google account {chosen.get_attribute('data-identifier')}")
+                self._click(chosen)
                 self._sleep(1.5)
                 continue
             if self._google_email_box() is not None:
@@ -787,7 +806,15 @@ class ExternalApplier:
                         lambda: self._google_email_box() is None, self.settings.manual_wait_seconds):
                     return False
                 continue
-            if self._click_google_consent():
+            consent = self._google_consent_button()
+            if consent is not None:
+                if _GOOGLE_RISKY.search(text):
+                    if not self._wait_for_human("Google is asking for permissions beyond signing in - review them in the browser window",
+                                                lambda: self._google_finished(window), self.settings.manual_wait_seconds):
+                        self.log("Google is asking for more than a sign-in (e.g. access to Drive or Gmail); not approving that for you.")
+                        return False
+                    continue
+                self._click(consent)
                 self._sleep(1.5)
                 continue
             self._sleep(1)
@@ -808,20 +835,19 @@ class ExternalApplier:
         except WebDriverException:
             return False
 
-    def _pick_google_account(self, want: str) -> bool:
+    def _google_accounts(self) -> list:
         try:
-            accounts = [a for a in self.driver.find_elements(By.CSS_SELECTOR, "[data-identifier]") if a.is_displayed() and a.get_attribute("data-identifier")]
+            return [a for a in self.driver.find_elements(By.CSS_SELECTOR, "[data-identifier]")
+                    if a.is_displayed() and a.get_attribute("data-identifier")]
         except WebDriverException:
-            return False
-        if not accounts:
-            return False
-        chosen = next((a for a in accounts if want and want == _norm(a.get_attribute("data-identifier"))), None)
-        if chosen is None:
-            if want and len(accounts) > 1:
-                self.log(f'Your Google account "{self.settings.google_email}" is not in the account list - using the first one.')
-            chosen = accounts[0]
-        self.log(f"Choosing Google account {chosen.get_attribute('data-identifier')}")
-        return self._click(chosen)
+            return []
+
+    @staticmethod
+    def _choose_google_account(accounts: list, want: str):
+        """The account to sign in with, or None when it would be a guess (the configured one is missing / several are listed)."""
+        if want:
+            return next((a for a in accounts if want == _norm(a.get_attribute("data-identifier"))), None)
+        return accounts[0] if len(accounts) == 1 else None
 
     def _google_email_box(self):
         '''The visible, still-empty email box on a Google sign-in page, or None.'''
@@ -843,15 +869,15 @@ class ExternalApplier:
         except WebDriverException:
             return False
 
-    def _click_google_consent(self) -> bool:
+    def _google_consent_button(self):
         pattern = re.compile(r"^(continue|allow|confirm|yes|i understand|next|accept|agree)$")
         try:
             for item in self._buttons():
                 if pattern.match(_norm(item["text"])):
-                    return self._click(item["el"])
+                    return item["el"]
         except WebDriverException:
             pass
-        return False
+        return None
 
     # ------------------------------------------------------------------ steps
     def _click_apply(self, buttons: list) -> bool:
@@ -1018,13 +1044,19 @@ class ExternalApplier:
             if real_fields or has_file:
                 if has_file:
                     self._upload_resume()
-                filled, unresolved = self._fill_page()
+                filled, unresolved = 0, []
+                for _ in range(3):
+                    passed, unresolved = self._fill_page()
+                    filled += passed
+                    if not passed:
+                        break
                 if unresolved:
                     ok = self._wait_for_human(
                         "answer the highlighted questions in the browser window: " + "; ".join(unresolved[:4]),
                         lambda: not self._unresolved(), self.settings.manual_wait_seconds)
                     if not ok:
-                        return self._result(NEEDS_MANUAL, "Required questions the tool can't answer: " + "; ".join(unresolved[:6]), step, unresolved)
+                        described = [f"{label} ({self._reasons[label]})" if label in self._reasons else label for label in unresolved[:6]]
+                        return self._result(NEEDS_MANUAL, "Required questions the tool can't answer: " + "; ".join(described), step, unresolved)
                 buttons = self._buttons()
                 clicked = self._advance(buttons, state)
                 if clicked is None:

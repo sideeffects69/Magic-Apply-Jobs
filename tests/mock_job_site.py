@@ -22,6 +22,14 @@ COOKIE = """<div id="cookie-banner" class="cookie-consent"><p>We use cookies.</p
 
 POPUP = ("window.open('http://localhost:%PORT%/google/accounts.html', 'googleauth', 'width=480,height=640')")
 
+
+def popup_to(path):
+    return "window.open('http://localhost:%PORT%" + path + "', 'googleauth', 'width=480,height=640')"
+
+
+def login_page(path):
+    return """<!doctype html><title>Sign in</title>""" + STYLE + """<main><h1>Sign in to apply</h1><form onsubmit="return false"><label>Email <input type="email"></label><label>Password <input type="password"></label></form><button id="g" type="button">Continue with Google</button></main><script>document.getElementById('g').onclick = () => { """ + popup_to(path) + """; };window.addEventListener('message', e => { if (e.data === 'google-ok') location.href = '/apply.html'; });</script>"""
+
 PAGES = {
     "/job.html": """<!doctype html><title>Senior Ad Ops - Acme</title>""" + STYLE + """
 <header><input type="search" placeholder="Search jobs"> <a href="/about.html">About us</a></header>
@@ -178,6 +186,41 @@ document.getElementById('f2').onsubmit = (e) => {
     "/silent-submit.html": """<!doctype html><title>Apply</title>""" + STYLE + """
 <main><h1>Apply</h1><form onsubmit="return false"><label>First name * <input name="first_name" required value="Asha"></label>
 <button type="submit" id="go" onclick="fetch('/event?name=submit-click')">Submit application</button></form></main>""",
+
+    "/login-one.html": login_page("/google/one-account.html"),
+    "/login-consent.html": login_page("/google/consent-safe.html"),
+    "/login-risky.html": login_page("/google/consent-risky.html"),
+
+    "/google/one-account.html": """<!doctype html><title>Choose an account</title><body><h1>Choose an account</h1>
+<div role="link" data-identifier="solo@example.com" style="padding:12px;border:1px solid #ccc;cursor:pointer">Solo User solo@example.com</div>
+<script>document.querySelector('[data-identifier]').onclick = () => { fetch('/picked?account=solo@example.com');
+  setTimeout(() => { window.opener && window.opener.postMessage('google-ok', '*'); window.close(); }, 200); };</script>""",
+
+    "/google/consent-safe.html": """<!doctype html><title>Sign in</title><body><h1>Sign in to Acme with Google</h1>
+<p>To continue, Google will share your name, email address, language preference and profile picture with Acme.</p>
+<button id="c" onclick="fetch('/event?name=consent-clicked'); setTimeout(() => { window.opener && window.opener.postMessage('google-ok', '*'); window.close(); }, 200);">Continue</button>""",
+
+    "/google/consent-risky.html": """<!doctype html><title>Acme wants access</title><body><h1>Acme wants access to your Google Account</h1>
+<p>This will allow Acme to: See, edit, download and permanently delete all your Google Drive files. Read, compose and send email from your Gmail.</p>
+<button id="a" onclick="fetch('/event?name=allow-clicked')">Allow</button>""",
+
+    "/dependent.html": """<!doctype html><title>Apply</title>""" + STYLE + """
+<main><h1>Location</h1><form id="f" novalidate>
+<label>Country * <select id="country" name="country" required><option>Select...</option><option>India</option><option>United States</option></select></label>
+<div id="statebox" style="display:none"><label>State * <input id="state" name="state" required></label></div>
+<p class="error" id="err"></p><button type="submit" id="submit">Submit application</button></form></main>
+<script>document.getElementById('country').onchange = () => { document.getElementById('statebox').style.display = 'block'; };
+document.getElementById('f').onsubmit = (e) => { e.preventDefault();
+ if (country.selectedIndex < 1 || (statebox.style.display !== 'none' && !state.value)) { err.textContent = 'required'; return; }
+ fetch('/submit', {method: 'POST', body: JSON.stringify({country: country.value, state: state.value})}).then(() => location.href = '/thanks.html'); };</script>""",
+
+    "/optional-textarea.html": """<!doctype html><title>Apply</title>""" + STYLE + """
+<main><h1>Apply</h1><form id="f" novalidate>
+<label>First name * <input id="fn" name="first_name" required value="Asha"></label>
+<label>Anything else you would like us to know? <textarea id="more" name="more"></textarea></label>
+<button type="submit" id="submit">Submit application</button></form></main>
+<script>document.getElementById('f').onsubmit = (e) => { e.preventDefault();
+ fetch('/submit', {method: 'POST', body: JSON.stringify({more: more.value})}).then(() => location.href = '/thanks.html'); };</script>""",
 
     "/blank.html": """<!doctype html><title>Nothing here</title><main><h1>Company news</h1><p>No jobs on this page.</p></main>""",
 }

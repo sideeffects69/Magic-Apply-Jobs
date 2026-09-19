@@ -29,6 +29,13 @@ fi
 
 VENV_PY=".venv/bin/python"
 
+# A virtual environment is tied to the exact folder (and computer) it was created in. If this project was
+# copied or moved, the old .venv looks present but no longer works - rebuild it instead of failing oddly.
+if [ -x "$VENV_PY" ] && ! "$VENV_PY" --version >/dev/null 2>&1; then
+    echo "Found a Python environment from a different computer or folder - rebuilding it..."
+    rm -rf .venv
+fi
+
 # 2) Create a private Python environment the first time.
 if [ ! -x "$VENV_PY" ]; then
     echo "Setting up for the first time (this can take a minute)..."
@@ -36,8 +43,8 @@ if [ ! -x "$VENV_PY" ]; then
 fi
 
 # 3) Install the required packages once (quietly).
-if [ ! -f ".venv/.deps_installed" ]; then
-    echo "Installing required packages (one time only)..."
+if [ ! -f ".venv/.deps_installed" ] || [ requirements.txt -nt ".venv/.deps_installed" ]; then
+    echo "Installing required packages (first run, or the package list changed)..."
     "$VENV_PY" -m pip install --quiet --upgrade pip
     "$VENV_PY" -m pip install --quiet -r requirements.txt || { echo "Could not install required packages."; read -r -p "Press Return to close..." _; exit 1; }
     touch ".venv/.deps_installed"

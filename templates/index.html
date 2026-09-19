@@ -275,9 +275,22 @@
                 return node;
             }
 
+            // Links come from scraped job data (and from restored backup files) - only web / mail / phone links
+            // and same-site paths are allowed. A "javascript:" link would run code inside this page.
+            function safeHref(url) {
+                var value = String(url || '').trim();
+                if (/^(https?:|mailto:|tel:)/i.test(value) || value.charAt(0) === '/' || value.charAt(0) === '#') return value;
+                return '';
+            }
+
             function makeLink(href, label, extraClass) {
+                if (!safeHref(href)) {                       // not a safe link: show the text, don't link it
+                    var plain = document.createElement('span');
+                    plain.textContent = label;
+                    return plain;
+                }
                 var a = document.createElement('a');
-                a.href = href;
+                a.href = safeHref(href);
                 a.target = '_blank';
                 a.rel = 'noopener';
                 a.textContent = label;
@@ -340,7 +353,7 @@
                 }
                 if (job.External_Job_link) {
                     var link = makeLink(job.External_Job_link, 'External link');
-                    link.addEventListener('click', function () {
+                    if (!isAppliedAlready(job)) link.addEventListener('click', function () {
                         fetch('/applied-jobs/' + encodeURIComponent(job.Job_ID), { method: 'PUT' })
                             .then(function (resp) {
                                 if (resp.ok) markRowApplied(job.Job_ID);
@@ -583,6 +596,7 @@
 
             fetch('/applied-jobs')
                 .then(function (resp) {
+                    if (resp.status === 404) return [];         // no history yet
                     if (!resp.ok) throw new Error('Server responded with ' + resp.status);
                     return resp.json();
                 })

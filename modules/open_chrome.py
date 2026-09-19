@@ -43,22 +43,19 @@ def createChromeSession(isRetry: bool = False):
         print_lg("Logging in with a guest profile, Web history will not be saved!")
         options.add_argument(f"--user-data-dir={get_default_temp_profile()}")
     if auto_manage_driver:
-        # try:
-        #     driver = uc.Chrome(driver_executable_path="C:\\Program Files\\Google\\Chrome\\chromedriver-win64\\chromedriver.exe", options=options)
-        # except (FileNotFoundError, PermissionError) as e:
-        #     print_lg("(auto-managed driver) Got '{}' when using pre-installed ChromeDriver.".format(type(e).__name__))
-            print_lg("Downloading the matching Chrome driver... This may take some time (this happens each run when auto_manage_driver is enabled).")
-            # Without version_main, undetected_chromedriver doesn't detect the
-            # installed browser at all - it just grabs whatever "latest" driver
-            # Google's API reports, which can be ahead of what's installed and
-            # fail with "This version of ChromeDriver only supports Chrome
-            # version X". Pin it to the browser actually on this machine.
-            chrome_version = find_installed_chrome_major_version()
-            if chrome_version:
-                driver = uc.Chrome(options=options, version_main=chrome_version)
-            else:
-                driver = uc.Chrome(options=options)
-    else: driver = webdriver.Chrome(options=options) #, service=Service(executable_path="C:\\Program Files\\Google\\Chrome\\chromedriver-win64\\chromedriver.exe"))
+        print_lg("Downloading the matching Chrome driver... This may take some time (this happens each run when auto_manage_driver is enabled).")
+        # Without version_main, undetected_chromedriver doesn't detect the
+        # installed browser at all - it just grabs whatever "latest" driver
+        # Google's API reports, which can be ahead of what's installed and
+        # fail with "This version of ChromeDriver only supports Chrome
+        # version X". Pin it to the browser actually on this machine.
+        chrome_version = find_installed_chrome_major_version()
+        if chrome_version:
+            driver = uc.Chrome(options=options, version_main=chrome_version)
+        else:
+            driver = uc.Chrome(options=options)
+    else:
+        driver = webdriver.Chrome(options=options)
     driver.maximize_window()
     wait = WebDriverWait(driver, 5)
     actions = ActionChains(driver)

@@ -95,9 +95,14 @@ pause
 exit /b 1
 
 :venv_ready
-REM 3) Install the required packages once (quietly).
-if exist ".venv\.deps_installed" goto :deps_ready
-echo Installing required packages (one time only, this can take several minutes)...
+REM 3) Install the required packages (quietly) - the first time, and again whenever requirements.txt changed
+REM    (for example after an update), so an old setup never runs against a newer version of the tool.
+if not exist ".venv\.deps_installed" goto :install_deps
+"%VENV_PY%" -c "import os, sys; sys.exit(1 if os.path.getmtime('requirements.txt') > os.path.getmtime('.venv/.deps_installed') else 0)"
+if not errorlevel 1 goto :deps_ready
+
+:install_deps
+echo Installing required packages (first run, or the package list changed - this can take several minutes)...
 "%VENV_PY%" -m pip install --quiet --disable-pip-version-check --upgrade pip
 "%VENV_PY%" -m pip install --quiet --disable-pip-version-check -r requirements.txt
 if errorlevel 1 goto :deps_failed

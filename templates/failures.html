@@ -133,12 +133,13 @@
                             <th class="center" style="width:44px;">#</th>
                             <th>Job</th>
                             <th>Reason</th>
+                            <th>Company site</th>
                             <th>Date Tried</th>
                             <th>Screenshot</th>
                         </tr>
                     </thead>
                     <tbody id="historyBody">
-                        <tr class="placeholder-row"><td colspan="5">Loading failed jobs...</td></tr>
+                        <tr class="placeholder-row"><td colspan="6">Loading failed jobs...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -161,15 +162,28 @@
 
             // Reasons that mean "the bot correctly skipped this per your filters",
             // as opposed to an actual error worth investigating.
-            var SKIP_REASONS = ['Found a Bad Word in About Job', 'Found Blacklisted words in About Company', 'Required experience is high'];
+            var SKIP_REASONS = ['Found a Bad Word in About Job', 'Found Blacklisted words in About Company', 'Required experience is high', 'Asking for Security clearance'];
 
             function isSkip(job) {
                 return SKIP_REASONS.indexOf(job.Reason) !== -1;
             }
 
+            // Links come from scraped job data (and from restored backup files) - only web / mail / phone links
+            // and same-site paths are allowed. A "javascript:" link would run code inside this page.
+            function safeHref(url) {
+                var value = String(url || '').trim();
+                if (/^(https?:|mailto:|tel:)/i.test(value) || value.charAt(0) === '/' || value.charAt(0) === '#') return value;
+                return '';
+            }
+
             function makeLink(href, label) {
+                if (!safeHref(href)) {
+                    var plain = document.createElement('span');
+                    plain.textContent = label;
+                    return plain;
+                }
                 var a = document.createElement('a');
-                a.href = href;
+                a.href = safeHref(href);
                 a.target = '_blank';
                 a.rel = 'noopener';
                 a.textContent = label;
@@ -217,6 +231,11 @@
                 reasonCell.appendChild(badge);
                 tr.appendChild(reasonCell);
 
+                var siteCell = document.createElement('td');
+                if (safeHref(job.External_Job_link)) siteCell.appendChild(makeLink(job.External_Job_link, 'Open application'));
+                else siteCell.textContent = '-';
+                tr.appendChild(siteCell);
+
                 tr.appendChild(makeCellText(job.Date_Tried || ''));
 
                 var shotCell = document.createElement('td');
@@ -253,7 +272,7 @@
                 var tr = document.createElement('tr');
                 tr.className = 'placeholder-row' + (isError ? ' error' : '');
                 var td = document.createElement('td');
-                td.colSpan = 5;
+                td.colSpan = 6;
                 td.textContent = message;
                 tr.appendChild(td);
                 tbody.appendChild(tr);

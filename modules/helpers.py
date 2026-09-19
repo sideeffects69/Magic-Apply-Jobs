@@ -185,9 +185,9 @@ def find_installed_chrome_major_version() -> int | None:
                     result = subprocess.run([binary, "--version"], capture_output=True, text=True, timeout=10)
                     digits = result.stdout.strip().split()[-1]
                     return int(digits.split(".")[0])
-                except (OSError, subprocess.SubprocessError):
+                except (OSError, subprocess.SubprocessError, ValueError, IndexError):
                     continue
-        except (ValueError, IndexError):
+        except ImportError:
             pass
     return None
 #>
@@ -234,7 +234,12 @@ def print_lg(*msgs: str | dict, end: str = "\n", pretty: bool = False, flush: bo
             # gets written to log.txt below, which is always opened as UTF-8.
             pass
         try:
-            with open(__logs_file_path, 'a+', encoding="utf-8") as file:
+            try:
+                file = open(__logs_file_path, 'a+', encoding="utf-8")
+            except FileNotFoundError:
+                os.makedirs(os.path.dirname(os.path.abspath(__logs_file_path)), exist_ok=True)
+                file = open(__logs_file_path, 'a+', encoding="utf-8")
+            with file:
                 file.write(str(message) + end)
         except OSError as e:
             # print_lg() is called from hundreds of places throughout a run - a
@@ -259,9 +264,9 @@ def buffer(speed: int=0) -> None:
     '''
     if speed<=0:
         return
-    elif speed <= 1 and speed < 2:
+    elif speed < 2:
         return sleep(randint(6,10)*0.1)
-    elif speed <= 2 and speed < 3:
+    elif speed < 3:
         return sleep(randint(10,18)*0.1)
     else:
         return sleep(randint(18,round(speed)*10)*0.1)
@@ -273,7 +278,6 @@ def manual_login_retry(is_logged_in: callable, limit: int = 2) -> None:
     '''
     count = 0
     while not is_logged_in():
-        from pyautogui import alert
         print_lg("Seems like you're not logged in!")
         button = "Confirm Login"
         message = 'After you successfully Log In, please click "{}" button below.'.format(button)

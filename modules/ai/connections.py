@@ -26,6 +26,7 @@ Public interface (used by runAiBot.py):
 from __future__ import annotations
 
 import os
+import re
 from typing import Optional
 
 from pydantic import BaseModel, Field
@@ -236,6 +237,8 @@ def _build_answer_graph(model):
     def select_option(state: _AnswerState) -> dict:
         raw = (state.get("raw") or "").strip()
         options = state.get("options") or []
+        if not raw:
+            return {"answer": ""}                 # an empty reply must not "match" the first option
         for opt in options:                       # exact
             if raw == opt:
                 return {"answer": opt}
@@ -243,13 +246,16 @@ def _build_answer_graph(model):
         for opt in options:                       # case-insensitive
             if low == opt.lower():
                 return {"answer": opt}
-        for opt in options:                       # substring (either direction)
-            if opt.lower() in low or low in opt.lower():
+        def whole_word(needle: str, haystack: str) -> bool:
+            return re.search(r"(?<![a-z0-9])" + re.escape(needle) + r"(?![a-z0-9])", haystack) is not None
+
+        for opt in options:                       # one contains the other as whole words ("No" is not inside "Not sure")
+            if whole_word(opt.lower(), low) or whole_word(low, opt.lower()):
                 return {"answer": opt}
         return {"answer": raw}
 
     def route(state: _AnswerState) -> str:
-        return "select" if state.get("question_type") in ("single_select", "multiple_select") else "text"
+        return "select" if state.get("question_type") in ("single_select", "multiple_select", "select", "radio") else "text"
 
     graph = StateGraph(_AnswerState)
     graph.add_node("build_prompt", build_prompt)

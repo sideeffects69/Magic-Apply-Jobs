@@ -199,3 +199,63 @@ def test_format_notice(days, label, expected):
 
 def test_classify_returns_empty_for_unrecognised_fields():
     assert classify(field("text", "Something entirely different")) == ""
+
+
+# ---------------------------------------------------------------------------
+# Bugs found in a full review of the answer rules
+# ---------------------------------------------------------------------------
+def test_the_bots_config_passes_numbers_as_text_and_that_must_not_crash():
+    profile = Profile.from_values(desired_salary="1200000", current_ctc="800,000", notice_period="30", years_of_experience=3)
+    assert (profile.desired_salary, profile.current_ctc, profile.notice_period) == (1200000, 800000, 30)
+    assert profile.years_of_experience == "3"
+    assert decide(field("text", "Expected CTC in lakhs"), profile).value == "12.00"
+    assert decide(field("text", "Notice period in weeks"), profile).value == "4"
+    assert Profile.from_values(desired_salary="", notice_period=None).desired_salary == 0
+
+
+@pytest.mark.parametrize("options, desired, expected", [
+    (["Select", "0-2 years", "3-5 years", "10-13 years"], "3", 2),           # never the substring match "10-13"
+    (["1-2", "2-3", "5+"], "3", 1),
+    (["Less than 1 year", "1-3 years", "More than 5 years"], "0", 0),
+    (["Less than 1 year", "1-3 years", "More than 5 years"], "8", 2),
+    (["0-1", "2-4", "10+"], "12", 2),
+    (["4-6", "10-13"], "3", None),                                            # no range holds 3: unknown, not a guess
+    (["30 days", "60 days", "90 days"], "60", 1),
+    (["30 days", "60 days", "90 days"], "45", None),
+])
+def test_a_number_picks_the_option_whose_range_holds_it(options, desired, expected):
+    assert choose_option(options, desired) == expected
+
+
+def test_years_of_experience_dropdown_end_to_end(me):
+    options = ["Select", "0-2 years", "3-5 years", "6-10 years", "10-13 years"]
+    decision = decide(field("select", "Total years of experience", options=options), me)
+    assert (decision.action, decision.value) == ("choose", "3-5 years")
+
+
+def test_a_single_value_is_never_typed_into_an_essay_box(me):
+    for label in ("Describe your experience over the last 3 years", "Tell us your notice period and why you are leaving",
+                  "Explain your years of experience in ad tech"):
+        assert decide(field("textarea", label), me).action == "unknown", label
+    assert decide(field("textarea", "Cover letter"), me).action == "fill"
+    assert decide(field("textarea", "Tell us about yourself"), me).value == "Ad-tech pro."
+
+
+def test_work_authorisation_is_only_claimed_for_the_country_you_live_in(me):
+    # `me` lives in India with no US status.
+    yes_no = ["Yes", "No"]
+    assert decide(field("radio", "Are you legally authorized to work in the United States?", options=yes_no), me).action == "unknown"
+    assert decide(field("radio", "Are you authorized to work in the UK?", options=yes_no), me).action == "unknown"
+    assert decide(field("radio", "Are you legally authorized to work in India?", options=yes_no), me).value == "Yes"
+    assert decide(field("radio", "Are you authorized to work for our company?", options=yes_no), me).value == "Yes"
+    american = Profile.from_values(country="United States", us_citizenship="U.S. Citizen/Permanent Resident")
+    assert decide(field("radio", "Are you legally authorized to work in the US?", options=yes_no), american).value == "Yes"
+
+
+def test_willingness_to_relocate_is_not_assumed(me):
+    assert decide(field("radio", "Are you willing to relocate?", options=["Yes", "No"]), me).action == "unknown"
+
+
+def test_availability_alone_is_not_a_notice_period(me):
+    assert decide(field("text", "Weekend availability"), me).action == "unknown"
+    assert decide(field("text", "Earliest start date"), me).value == "30"

@@ -57,6 +57,8 @@ from modules.helpers import *
 from modules.clickers_and_finders import *
 from modules.validator import validate_config
 from modules.form_profile import Profile
+from modules.job_rules import (job_search_url, parse_card_title, parse_card_subtitle, requires_security_clearance,
+                               mentions_masters_degree, asks_about_visa, extract_years_required)
 from modules.external_apply import apply_on_external_site, ExternalSettings, APPLIED as EXTERNAL_APPLIED
 
 if use_AI:
@@ -94,7 +96,6 @@ dailyEasyApplyLimitReached = False
 easy_apply_exhausted = False        # LinkedIn's daily Easy Apply cap was hit; keep going with company-site jobs only
 external_apply_active = False       # set in main(): apply on company sites (vs. only saving their links)
 
-re_experience = re.compile(r'[(]?\s*(\d+)\s*[)]?\s*[-to]*\s*\d*[+]*\s*year[s]?', re.IGNORECASE)
 re_email = re.compile(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b')
 re_phone = re.compile(r'(?<!\d)(\+?\(?\d[\d\-.\s()]{7,16}\d\)?)(?!\d)')
 re_linkedin_profile = re.compile(r'https?://[a-z]{2,3}\.linkedin\.com/in/[A-Za-z0-9\-_%]+/?|https?://(?:www\.)?linkedin\.com/in/[A-Za-z0-9\-_%]+/?', re.IGNORECASE)
@@ -180,9 +181,9 @@ def login_LN() -> None:
     '''
     # Find the username and password fields and fill them with user credentials
     driver.get("https://www.linkedin.com/login")
-    if username == "username@example.com" and password == "example_password":
-        pyautogui.alert("User did not configure username and password in secrets.py, hence can't login automatically! Please login manually!", "Login Manually","Okay")
-        print_lg("User did not configure username and password in secrets.py, hence can't login automatically! Please login manually!")
+    if not username.strip() or not password.strip() or (username == "username@example.com" and password == "example_password"):
+        pyautogui.alert("No LinkedIn username and password are set, so the tool can't log in automatically. Please log in manually in the browser window!", "Login Manually","Okay")
+        print_lg("No LinkedIn username and password are set, so the tool can't log in automatically. Please log in manually!")
         manual_login_retry(is_logged_in_LN, 2)
         return
     try:
@@ -226,10 +227,10 @@ def get_applied_job_ids() -> set[str]:
     '''
     job_ids: set[str] = set()
     try:
-        with open(file_name, 'r', encoding='utf-8') as file:
-            reader = csv.reader(file)
-            for row in reader:
-                job_ids.add(row[0])
+        with open(file_name, 'r', encoding='utf-8', newline='') as file:
+            for row in csv.reader(file):
+                if row:                      # a blank line in the CSV (e.g. saved from Excel) has no columns
+                    job_ids.add(row[0])
     except FileNotFoundError:
         print_lg(f"The CSV file '{file_name}' does not exist.")
     return job_ids
@@ -245,9 +246,9 @@ def count_applications_today() -> int:
     count = 0
     today = datetime.now().strftime('%Y-%m-%d')
     try:
-        with open(file_name, 'r', encoding='utf-8') as file:
+        with open(file_name, 'r', encoding='utf-8', newline='') as file:
             for row in csv.DictReader(file):
-                if row.get('Date Applied', '').startswith(today):
+                if (row.get('Date Applied') or '').startswith(today):     # short rows give None, not ''
                     count += 1
     except FileNotFoundError:
         pass
@@ -369,16 +370,10 @@ def get_job_main_details(job: WebElement, blacklisted_companies: set, rejected_j
     job_details_button = job.find_element(By.TAG_NAME, 'a')  # job.find_element(By.CLASS_NAME, "job-card-list__title")  # Problem in India
     scroll_to_view(driver, job_details_button, True)
     job_id = job.get_dom_attribute('data-occludable-job-id')
-    title = job_details_button.text
-    title = title[:title.find("\n")]
+    title = parse_card_title(job_details_button.text)
     # company = job.find_element(By.CLASS_NAME, "job-card-container__primary-description").text
     # work_location = job.find_element(By.CLASS_NAME, "job-card-container__metadata-item").text
-    other_details = job.find_element(By.CLASS_NAME, 'artdeco-entity-lockup__subtitle').text
-    index = other_details.find(' · ')
-    company = other_details[:index]
-    work_location = other_details[index+3:]
-    work_style = work_location[work_location.rfind('(')+1:work_location.rfind(')')]
-    work_location = work_location[:work_location.rfind('(')].strip()
+    company, work_location, work_style = parse_card_subtitle(job.find_element(By.CLASS_NAME, 'artdeco-entity-lockup__subtitle').text)
     
     # Skip if previously rejected due to blacklist or already applied
     if company in blacklisted_companies:
@@ -431,11 +426,10 @@ def check_blacklist(rejected_jobs: set, job_id: str, company: str, blacklisted_c
 # Function to extract years of experience required from About Job
 def extract_years_of_experience(text: str) -> int:
     # Extract all patterns like '10+ years', '5 years', '3-5 years', etc.
-    matches = re.findall(re_experience, text)
-    if len(matches) == 0: 
+    years = extract_years_required(text)
+    if years == 0:
         print_lg(f'\n{text}\n\nCouldn\'t find experience requirement in About the Job!')
-        return 0
-    return max([int(match) for match in matches if int(match) <= 12])
+    return years
 
 
 
@@ -525,12 +519,12 @@ def get_job_description(
                 skipReason = "Found a Bad Word in About Job"
                 skip = True
                 break
-        if not skip and security_clearance == False and ('polygraph' in jobDescriptionLow or 'clearance' in jobDescriptionLow or 'secret' in jobDescriptionLow):
+        if not skip and security_clearance == False and requires_security_clearance(jobDescription):
             skipMessage = f'\n{jobDescription}\n\nFound "Clearance" or "Polygraph". Skipping this job!\n'
             skipReason = "Asking for Security clearance"
             skip = True
         if not skip:
-            if did_masters and 'master' in jobDescriptionLow:
+            if did_masters and mentions_masters_degree(jobDescription):
                 print_lg(f'Found the word "master" in \n{jobDescription}')
                 found_masters = 2
             experience_required = extract_years_of_experience(jobDescription)
@@ -557,7 +551,7 @@ def upload_resume(modal: WebElement, resume: str) -> tuple[bool, str]:
 
 # Function to answer common questions for Easy Apply
 def answer_common_questions(label: str, answer: str) -> str:
-    if 'sponsorship' in label or 'visa' in label: answer = require_visa
+    if asks_about_visa(label): answer = require_visa
     return answer
 
 
@@ -639,7 +633,7 @@ def answer_questions(modal: WebElement, questions_list: set, work_location: str,
                             break
                     if not matched:
                         print_lg(f'No option matched "{answer}" for "{label_org}", picking one at random.')
-                        select.select_by_index(randint(1, len(select.options) - 1))
+                        select.select_by_index(randint(1, len(select.options) - 1) if len(select.options) > 1 else 0)
                         answer = select.first_selected_option.text
                         randomly_answered_questions.add((f'{label_org} [ {options} ]', "select"))
             questions_list.add((f'{label_org} [ {options} ]', answer, "select", prev_answer))
@@ -673,7 +667,7 @@ def answer_questions(modal: WebElement, questions_list: set, work_location: str,
                 elif 'disability' in label or 'handicapped' in label: 
                     answer = disability_status
                 else: answer = answer_common_questions(label,answer)
-                foundOption = try_xp(radio, f".//label[normalize-space()='{answer}']", False)
+                foundOption = try_xp(radio, ".//label[normalize-space()=" + xpath_literal(answer) + "]", False)
                 if foundOption: 
                     actions.move_to_element(foundOption).click().perform()
                 else:    
@@ -828,7 +822,6 @@ def answer_questions(modal: WebElement, questions_list: set, work_location: str,
                     checked = True
                 except Exception as e: 
                     print_lg("Checkbox click failed!", e)
-                    pass
             questions_list.add((f'{label} ([X] {answer})', checked, "checkbox", prev_answer))
             continue
 
@@ -867,9 +860,10 @@ def run_external_application(description: str):
 
     ask_ai = None
     if use_AI and aiClient:
-        def ask_ai(question, options, kind):
+        def ask_ai_question(question, options, kind):
             return answer_question(aiClient, question, options=options or None, question_type="select" if options else kind,
                                    job_description=description, user_information_all=user_information_all)
+        ask_ai = ask_ai_question
 
     def confirm_submit(url):
         return pyautogui.confirm("Please look over the application in the browser.\n\nIt is about to be submitted.\n\n" + url,
@@ -1056,7 +1050,7 @@ def apply_to_jobs(search_terms: list[str]) -> None:
 
     if randomize_search_order:  shuffle(search_terms)
     for searchTerm in search_terms:
-        driver.get(f"https://www.linkedin.com/jobs/search/?keywords={searchTerm}")
+        driver.get(job_search_url(searchTerm))
         print_lg("\n________________________________________________________________________________________________________________________\n")
         print_lg(f'\n>>>> Now searching for "{searchTerm}" <<<<\n\n')
 
@@ -1106,6 +1100,7 @@ def apply_to_jobs(search_terms: list[str]) -> None:
                     questions_list = None
                     screenshot_name = "Not Available"
 
+                    jobs_top_card = None
                     try:
                         rejected_jobs, blacklisted_companies, jobs_top_card = check_blacklist(rejected_jobs,job_id,company,blacklisted_companies)
                     except ValueError as e:
@@ -1149,6 +1144,7 @@ def apply_to_jobs(search_terms: list[str]) -> None:
                     try:
                         # try: time_posted_text = find_by_class(driver, "jobs-unified-top-card__posted-date", 2).text
                         # except: 
+                        if jobs_top_card is None: raise ValueError("job top card was not found")
                         time_posted_text = jobs_top_card.find_element(By.XPATH, './/span[contains(normalize-space(), " ago")]').text
                         print("Time Posted: " + time_posted_text)
                         if time_posted_text.__contains__("Reposted"):
@@ -1307,7 +1303,9 @@ def apply_to_jobs(search_terms: list[str]) -> None:
                                     print_lg("Since, Submit Application failed, discarding the job application...")
                                     # if screenshot_name == "Not Available":  screenshot_name = screenshot(driver, job_id, "Failed to click Submit application")
                                     # else:   screenshot_name = [screenshot_name, screenshot(driver, job_id, "Failed to click Submit application")]
-                                    if errored == "nose": raise Exception("Failed to click Submit application 😑")
+                                    # Whatever ended the question loop, a Submit that could not be clicked means NOT applied. Falling through here
+                                    # used to record the job as submitted (and count it toward the daily cap) when nothing had been sent.
+                                    if errored != "stuck": raise Exception("Failed to click Submit application 😑")
 
 
                         except Exception as e:
@@ -1405,7 +1403,7 @@ def main() -> None:
     # A modal here blocks unattended runs for no functional reason - log it instead.
     total_runs = 1
     try:
-        global linkedIn_tab, tabs_count, useNewResume, aiClient, external_apply_active
+        global linkedIn_tab, tabs_count, useNewResume, aiClient, external_apply_active, date_posted
         validate_config()
 
         external_apply_active = external_apply_enabled and not easy_apply_only
@@ -1451,9 +1449,8 @@ def main() -> None:
         driver.switch_to.window(linkedIn_tab)
         total_runs = run(total_runs)
         while(run_non_stop):
-            if cycle_date_posted:
+            if cycle_date_posted and date_posted in ["Any time", "Past month", "Past week", "Past 24 hours"]:
                 date_options = ["Any time", "Past month", "Past week", "Past 24 hours"]
-                global date_posted
                 date_posted = date_options[date_options.index(date_posted)+1 if date_options.index(date_posted)+1 > len(date_options) else -1] if stop_date_cycle_at_24hr else date_options[0 if date_options.index(date_posted)+1 >= len(date_options) else date_options.index(date_posted)+1]
             if alternate_sortby:
                 global sort_by

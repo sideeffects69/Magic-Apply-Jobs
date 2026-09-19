@@ -334,12 +334,21 @@
         var JOB_STATUSES = ['Applied', 'Interviewing', 'Offer', 'Rejected', 'Ghosted', 'Withdrawn'];
 
         // ---- helpers ----
+        // Links come from scraped job data (and from restored backup files) - only web / mail / phone links
+        // and same-site paths are allowed. A "javascript:" link would run code inside this page.
+        function safeHref(url) {
+            var value = String(url || '').trim();
+            if (/^(https?:|mailto:|tel:)/i.test(value) || value.charAt(0) === '/' || value.charAt(0) === '#') return value;
+            return '';
+        }
+
         function el(tag, attrs, children) {
             var node = document.createElement(tag);
             if (attrs) {
                 for (var k in attrs) {
                     if (k === 'text') { node.textContent = attrs[k]; }
                     else if (k === 'html') { node.innerHTML = attrs[k]; }
+                    else if (k === 'href') { var checked = safeHref(attrs[k]); if (checked) node.setAttribute('href', checked); }
                     else { node.setAttribute(k, attrs[k]); }
                 }
             }
@@ -685,15 +694,63 @@
                 .catch(function () {});
         }
 
-        function startBot() {
-            var msgOk = confirm('Start applying now?\n\nA browser window will open and use your LinkedIn account. Keep it in the foreground.');
-            if (!msgOk) return;
+        // The settings the person has changed on the tabs but not saved yet ({module: {key: value}}).
+        function collectUnsavedChanges() {
+            var payload = {}, count = 0;
+            SCHEMA.forEach(function (section) {
+                section.fields.forEach(function (field) {
+                    var current = readControlValue(field);
+                    if (current === undefined) return;
+                    if (JSON.stringify(current) !== JSON.stringify(baselineValue(field.config_module, field.key))) {
+                        if (!payload[field.config_module]) payload[field.config_module] = {};
+                        payload[field.config_module][field.key] = current;
+                        count++;
+                    }
+                });
+            });
+            return { payload: payload, count: count };
+        }
+
+        // What the person is about to run, in plain words (from the form as it is right now).
+        function describeRun() {
+            function val(cm, key) { var f = document.getElementById('f__' + cm + '__' + key); return f ? f : null; }
+            var terms = val('search', 'search_terms'), where = val('search', 'search_location'), easy = val('search', 'easy_apply_only');
+            var lines = [];
+            var termList = terms ? terms.value.split(',').map(function (t) { return t.trim(); }).filter(Boolean) : [];
+            lines.push('Searching for: ' + (termList.length ? termList.slice(0, 5).join(', ') + (termList.length > 5 ? ' (+' + (termList.length - 5) + ' more)' : '') : '(nothing set)'));
+            lines.push('Location: ' + (where && where.value.trim() ? where.value.trim() : 'LinkedIn default'));
+            lines.push(easy && easy.checked ? 'Only LinkedIn Easy Apply jobs.' : 'Easy Apply jobs AND jobs on company websites.');
+            return lines.join('\n');
+        }
+
+        function launchBot() {
             var pane = document.getElementById('logPane');
             pane.textContent = '';
             logOffset = 0;
             fetch('/api/run', { method: 'POST' }).then(function (r) { return r.json(); })
                 .then(function (s) { setRunningUI(s.running, s.pid); refreshLogs(); })
                 .catch(function () {});
+        }
+
+        function startBot() {
+            var unsaved = collectUnsavedChanges();
+            var question = 'Start applying now?\n\n' + describeRun() + '\n\nA browser window will open and use your LinkedIn account. Keep it in the foreground.';
+            if (unsaved.count > 0) {
+                question = 'You have ' + unsaved.count + (unsaved.count === 1 ? ' setting' : ' settings') + ' that are not saved yet - the bot only uses SAVED settings.\n\n' +
+                           'OK = save them and start.   Cancel = go back.\n\n' + describeRun();
+            }
+            if (!confirm(question)) return;
+            if (unsaved.count === 0) { launchBot(); return; }
+            fetch('/api/config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(unsaved.payload) })
+                .then(function (r) { return r.json().then(function (body) { return { ok: r.ok, body: body }; }); })
+                .then(function (res) {
+                    if (!res.ok) { alert('Could not save your settings, so nothing was started: ' + ((res.body && res.body.error) || 'unknown error')); return; }
+                    CONFIG = mergeConfigs(CONFIG, res.body);
+                    BASELINE = JSON.parse(JSON.stringify(CONFIG));
+                    markChanged();
+                    launchBot();
+                })
+                .catch(function (err) { alert('Could not save your settings, so nothing was started: ' + err); });
         }
 
         function clearActivityLog() {
@@ -884,7 +941,12 @@
                     var text = document.getElementById('resumeStatusText');
                     var hint = document.getElementById('resumeInstallHint');
                     var genBtn = document.getElementById('resumeGenBtn');
-                    if (s.available) {
+                    if (s.frozen) {
+                        dot.classList.add('off'); dot.classList.remove('on');
+                        text.textContent = "The Resume Builder isn't included in the portable exe - use start.bat from the project folder for it.";
+                        hint.style.display = 'none';
+                        genBtn.disabled = true;
+                    } else if (s.available) {
                         dot.classList.add('on'); dot.classList.remove('off');
                         text.textContent = 'RenderCV is installed - ready to generate.';
                         hint.style.display = 'none';

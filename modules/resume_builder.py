@@ -65,6 +65,9 @@ def generate_ats_resume() -> tuple[bool, str]:
     Returns `(success, message)` - on success, `message` is the absolute path
     to the generated PDF; on failure, a human-readable explanation.
     '''
+    if getattr(sys, "frozen", False):
+        # In the portable exe sys.executable IS the exe, so "python -m rendercv" would just start another control panel.
+        return False, "The Resume Builder isn't included in the portable exe. Use start.bat from the project folder for it."
     if not is_available():
         return False, (
             "RenderCV isn't installed. Run `pip install -r requirements-resume.txt` "
